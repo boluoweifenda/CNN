@@ -47,3 +47,4 @@ python top.py
 ```
 The training log files will be saved in log/xxxx.txt
 And the model will be saved in model/xxxx if you have configured in opt.py
+
