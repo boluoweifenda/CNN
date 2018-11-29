@@ -11,7 +11,7 @@ from six.moves import urllib
 import tensorflow as tf
 
 # The URLs where the fashion data can be downloaded.
-_DATA_URL = '????????????????????????'
+_DATA_URL = 'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/'
 _TRAIN_DATA_FILENAME = 'train-images-idx3-ubyte.gz'
 _TRAIN_LABELS_FILENAME = 'train-labels-idx1-ubyte.gz'
 _TEST_DATA_FILENAME = 't10k-images-idx3-ubyte.gz'
@@ -34,10 +34,7 @@ _CLASS_NAMES = [
   'ankle boot',
 ]
 
-
 LABELS_FILENAME = 'labels.txt'
-
-
 
 
 def int64_feature(values):
@@ -92,8 +89,6 @@ def read_label_file(dataset_dir, filename=LABELS_FILENAME):
     index = line.index(':')
     labels_to_class_names[int(line[:index])] = line[index+1:]
   return labels_to_class_names
-
-
 
 
 def _extract_images(filename, num_images):
