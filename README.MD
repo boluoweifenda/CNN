@@ -3,7 +3,8 @@
 Code example for convolutional neural network training
 
 ## Prerequisites
-- NVIDIA GPU + CUDA + CuDNN
+- A computer with NVIDIA GPUs (Please, it is important)
+- CUDA + CuDNN
 - Tensorflow (GPU version)
 - python3
 - tqdm
@@ -47,5 +48,6 @@ cd source/
 python top.py
 ```
 The training log files will be saved in log/xxxx.txt
+
 And the model will be saved in model/xxxx if you have configured in opt.py
 
