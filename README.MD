@@ -37,6 +37,7 @@ or
 gedit source/nets/lenet5.py
 ```
 or add your own network files, don't forget to register them in nets_factory.py
+
 You can also adjust and add other components, such as preprocessing, dataset, and register them in individual factory files.
 
 ## Train
