@@ -22,6 +22,22 @@ cd data/fashion
 python3 download_and_convert_fashion.py
 ```
 
+## Config training devices
+Change your configurations in the file
+```bash
+gedit source/opt.py
+```
+```bash
+gup_list=[0]
+```
+to use GPU0
+or
+```bash
+gup_list=[]
+```
+to use cpu
+
+
 ## Config training hyperparameters
 Change your configurations in the file
 ```bash
@@ -48,6 +64,8 @@ cd source/
 python top.py
 ```
 The training log files will be saved in log/xxxx.txt
+
+You can check the training details in log files, and derive statistics for drawing curves.
 
 And the model will be saved in model/xxxx if you have configured in opt.py
 
