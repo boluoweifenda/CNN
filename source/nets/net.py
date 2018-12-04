@@ -14,12 +14,20 @@ import warnings
 class Net(object):
   def __init__(self, x, y, is_training=True):
 
+    if len(opts.gpu_list) == 0:
+      print('No GPU, data_format is NHWC')
+      self.data_format = 'NHWC'
+    else:
+      print('GPU training for CNNs, data_format is NCHW')
+      self.data_format = 'NCHW'
+
     if x.dtype is not tf.float32:
       x = tf.to_float(x)
 
-    if self._shape(x)[1] != 1 and self._shape(x)[1] != 3:
-      print('Input data format is NHWC, convert to NCHW')
-      x = tf.transpose(x,[0,3,1,2])
+    if self.data_format == 'NCHW':
+      if self._shape(x)[1] != 1 and self._shape(x)[1] != 3:
+        print('Input data format is NHWC, convert to NCHW')
+        x = tf.transpose(x,[0,3,1,2])
 
     self.is_training = is_training
     self.shape_x = self._shape(x)
@@ -68,11 +76,25 @@ class Net(object):
         self.error = tf.reduce_mean(tf.to_float(tf.not_equal(tf.argmax(out, axis=1), label)))
 
   def _arr(self, stride_or_ksize):
-    # data format NCHW
-    return [1, 1, stride_or_ksize, stride_or_ksize]
+    if self.data_format == 'NCHW':
+      return [1, 1, stride_or_ksize, stride_or_ksize]
+    else:
+      return [1, stride_or_ksize, stride_or_ksize, 1]
 
   def _shape(self, x):
     return x.get_shape().as_list()
+
+  def _channel(self, x):
+    shape = x.get_shape().as_list()
+    if self.data_format == 'NCHW' and len(shape) == 4:
+      return shape[1]
+    elif self.data_format == 'NHWC' and len(shape) == 4:
+      return shape[3]
+    elif len(shape) == 2:
+      return shape[1]
+    else:
+      raise NotImplementedError('Wrong shapes' + shape)
+
 
   def _activation(self, x):
     return tf.nn.relu(x)
@@ -98,12 +120,12 @@ class Net(object):
     return self.W[-1]
 
   def _conv(self, x, ksize, c_out, stride=1, padding='SAME', bias=False, name='conv'):
-    c_in = self._shape(x)[1]
+    c_in = self._channel(x)
     W = self._get_variable([ksize, ksize, c_in, c_out], name)
-    x = tf.nn.conv2d(x, W, self._arr(stride), padding=padding, data_format='NCHW', name=name)
+    x = tf.nn.conv2d(x, W, self._arr(stride), padding=padding, data_format=self.data_format, name=name)
     if bias:
       b = self._get_variable([c_out], name + '_b', initializer=tf.initializers.zeros)
-      x = tf.nn.bias_add(x, b, data_format='NCHW')
+      x = tf.nn.bias_add(x, b, data_format=self.data_format)
     self.H.append(x)
 
     shape_out = self._shape(x)
@@ -113,7 +135,7 @@ class Net(object):
     return x
 
   def _fc(self, x, c_out, bias=False, name='fc'):
-    c_in = self._shape(x)[1]
+    c_in = self._channel(x)
     W = self._get_variable([c_in, c_out], name)
     x = tf.matmul(x, W)
     if bias:
@@ -126,21 +148,21 @@ class Net(object):
 
     return x
 
-  def _pool(self, x, type, ksize=2, stride=1, padding='SAME', data_format='NCHW'):
+  def _pool(self, x, type, ksize=2, stride=1, padding='SAME'):
     assert x.get_shape().ndims == 4, 'Invalid pooling shape:' + x.get_shape()
     if type == 'MAX':
-      x = tf.nn.max_pool(x, self._arr(ksize), self._arr(stride), padding=padding, data_format=data_format)
+      x = tf.nn.max_pool(x, self._arr(ksize), self._arr(stride), padding=padding, data_format=self.data_format)
     elif type == 'AVG':
-      x = tf.nn.avg_pool(x, self._arr(ksize), self._arr(stride), padding=padding, data_format=data_format)
+      x = tf.nn.avg_pool(x, self._arr(ksize), self._arr(stride), padding=padding, data_format=self.data_format)
     elif type == 'GLO':
-      x = tf.reduce_mean(x, [2, 3]) if data_format == 'NCHW' else tf.reduce_mean(x, [1, 2])
+      x = tf.reduce_mean(x, [2, 3]) if self.data_format == 'NCHW' else tf.reduce_mean(x, [1, 2])
     else:
       raise ValueError('Invalid pooling type:' + type)
     self.H.append(x)
     return x
 
-  def _batch_norm(self, x, center=True, scale=True, decay=0.9, epsilon=1e-5, data_format='NCHW'):
-    x = batch_norm(x, center=center, scale=scale, is_training=self.is_training, decay=decay, epsilon=epsilon, fused=True, data_format=data_format)
+  def _batch_norm(self, x, center=True, scale=True, decay=0.9, epsilon=1e-5):
+    x = batch_norm(x, center=center, scale=scale, is_training=self.is_training, decay=decay, epsilon=epsilon, fused=True, data_format=self.data_format)
     self.H.append(x)
     return x
 

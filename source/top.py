@@ -204,17 +204,18 @@ def main():
   ####################################################################################################
 
   num_gpu = len(gpu_list)
-  assert num_gpu > 0, 'Only support inference and training on GPU!'
+  num_split = num_gpu if num_gpu > 0 else 1
+
   dataset_train = get_dataset(dataset, split='train')
   dataset_test = get_dataset(dataset, split='test')
 
   num_batch_train = dataset_train.num_sample // batch_size
   num_batch_test = dataset_test.num_sample // 100
 
-  assert batch_size % num_gpu == 0, 'batch_size %d can not be divided by number of gpus %d' % (batch_size, num_gpu)
+  assert batch_size % num_split == 0, 'batch_size %d can not be divided by number of gpus %d' % (batch_size, num_split)
 
-  iterator_train = get_batch(dataset_train, preprocess, True, batch_size // num_gpu, num_gpu, seed=seed)
-  iterator_test = get_batch(dataset_test, preprocess, False, 100, num_gpu, seed=seed)
+  iterator_train = get_batch(dataset_train, preprocess, True, batch_size // num_split, num_split, seed=seed)
+  iterator_test = get_batch(dataset_test, preprocess, False, 100, num_split, seed=seed)
 
   ####################################################################################################
 
@@ -248,83 +249,122 @@ def main():
     print('Get L2 decay grads in the second GPU for speed')
     is_cpu_ps = True
   else:
-    raise NotImplementedError('Only support GPU training!')
+    print('Training with only CPU, maybe very slow')
+    print('All parameters are pinned to CPU, all Ops are pinned to CPU')
+    is_cpu_ps = True
 
   tower_grads = []
   tower_losses = []
   tower_errors = []
 
-  # Loops over the number of GPUs and creates a copy ("tower") of the model on each GPU.
-  for i in range(num_gpu):
+  if num_gpu > 0:
+    # Loops over the number of GPUs and creates a copy ("tower") of the model on each GPU.
+    for i in range(num_gpu):
 
-    worker = '/gpu:%d' % gpu_list[i]
+      worker = '/gpu:%d' % gpu_list[i]
 
-    # Creates a device setter used to determine where Ops are to be placed.
-    if is_cpu_ps:
-      # tf.train.replica_device_setter supports placing variables on the CPU, all
-      # on one GPU, or on ps_servers defined in a cluster_spec.
-      device_setter = tf.train.replica_device_setter(worker_device=worker, ps_device='/cpu:0', ps_tasks=1)
-    else:
-      device_setter = worker
+      # Creates a device setter used to determine where Ops are to be placed.
+      if is_cpu_ps:
+        # tf.train.replica_device_setter supports placing variables on the CPU, all
+        # on one GPU, or on ps_servers defined in a cluster_spec.
+        device_setter = tf.train.replica_device_setter(worker_device=worker, ps_device='/cpu:0', ps_tasks=1)
+      else:
+        device_setter = worker
 
-    '''
-    1. pin ops to GPU
-    2. pin parameters to CPU (multi-GPU training) or GPU (single-GPU training)
-    3. reuse parameters multi-GPU training
+      '''
+      1. pin ops to GPU
+      2. pin parameters to CPU (multi-GPU training) or GPU (single-GPU training)
+      3. reuse parameters multi-GPU training
+  
+      # Creates variables on the first loop.  On subsequent loops reuse is set
+      # to True, which results in the "towers" sharing variables.
+      # tf.device calls the device_setter for each Op that is created.
+      # device_setter returns the device the Op is to be placed on.
+      '''
+      with tf.variable_scope(tf.get_variable_scope(), reuse=bool(i != 0)), \
+           tf.device(device_setter):
 
-    # Creates variables on the first loop.  On subsequent loops reuse is set
-    # to True, which results in the "towers" sharing variables.
-    # tf.device calls the device_setter for each Op that is created.
-    # device_setter returns the device the Op is to be placed on.
-    '''
-    with tf.variable_scope(tf.get_variable_scope(), reuse=bool(i != 0)), \
-         tf.device(device_setter):
+        print('Training model on GPU %d' % gpu_list[i])
 
-      print('Training model on GPU %d' % gpu_list[i])
+        if mode == 'speed_net':
+          with tf.device('/cpu:0'):
+            # use fake data to test the computation speed on GPU
+            batch_train = iterator_train.get_next()
+            shape_x = [batch_size // num_gpu] + batch_train[0].get_shape().as_list()[1:]
+            shape_y = [batch_size // num_gpu] + batch_train[1].get_shape().as_list()[1:]
 
-      if mode == 'speed_net':
-        with tf.device('/cpu:0'):
-          # use fake data to test the computation speed on GPU
+            batch_train_x = tf.zeros(shape_x, dtype=tf.float32)
+            batch_train_y = tf.zeros(shape_y, dtype=tf.float32)
+          batch_train = [batch_train_x, batch_train_y]
+        else:
           batch_train = iterator_train.get_next()
-          shape_x = [batch_size // num_gpu] + batch_train[0].get_shape().as_list()[1:]
-          shape_y = [batch_size // num_gpu] + batch_train[1].get_shape().as_list()[1:]
 
-          batch_train_x = tf.zeros(shape_x, dtype=tf.float32)
-          batch_train_y = tf.zeros(shape_y, dtype=tf.float32)
+        nets.append(net(batch_train[0], batch_train[1], is_training=True))
+
+        tower_losses.append(nets[i].loss)
+        tower_errors.append(nets[i].error)
+
+        if i == 0:
+          # We only get batchnorm moving average updates from data in the first GPU for speed.
+          update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+          nets[-1].total_parameters()
+          nets[-1].total_MACs()
+
+        loss_worker = nets[i].loss
+        if num_gpu == 1:
+          # Single-GPU training
+          loss_worker += nets[i].get_l2_loss()
+        elif i == 1:
+          # We only compute L2 grads in the second GPU for speed.
+          # In this case, L2 grads should x numGPU to keep the equivalence
+          loss_worker += num_gpu * nets[i].get_l2_loss()
+        tower_grads.append(
+          optimizer.compute_gradients(loss_worker, colocate_gradients_with_ops=True))
+
+        if i == num_gpu - 1:
+          print('Testing model on GPU %d' % gpu_list[i])
+          if num_gpu == 1:
+            tf.get_variable_scope().reuse_variables()
+
+          batch_test = iterator_test.get_next()
+          nets.append(net(batch_test[0], batch_test[1], is_training=False))
+          error_batch_test = nets[-1].error
+  else:
+    # training with only CPU
+    with tf.variable_scope(tf.get_variable_scope()), \
+         tf.device('/cpu:0'):
+      print('Training model on CPU')
+      if mode == 'speed_net':
+        # use fake data to test the computation speed on GPU
+        batch_train = iterator_train.get_next()
+        shape_x = [batch_size // num_gpu] + batch_train[0].get_shape().as_list()[1:]
+        shape_y = [batch_size // num_gpu] + batch_train[1].get_shape().as_list()[1:]
+
+        batch_train_x = tf.zeros(shape_x, dtype=tf.float32)
+        batch_train_y = tf.zeros(shape_y, dtype=tf.float32)
         batch_train = [batch_train_x, batch_train_y]
       else:
         batch_train = iterator_train.get_next()
 
       nets.append(net(batch_train[0], batch_train[1], is_training=True))
 
-      tower_losses.append(nets[i].loss)
-      tower_errors.append(nets[i].error)
+      tower_losses.append(nets[-1].loss)
+      tower_errors.append(nets[-1].error)
 
-      if i == 0:
-        # We only get batchnorm moving average updates from data in the first GPU for speed.
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        nets[-1].total_parameters()
-        nets[-1].total_MACs()
+      update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+      nets[-1].total_parameters()
+      nets[-1].total_MACs()
 
-      loss_worker = nets[i].loss
-      if num_gpu == 1:
-        # Single-GPU training
-        loss_worker += nets[i].get_l2_loss()
-      elif i == 1:
-        # We only compute L2 grads in the second GPU for speed.
-        # In this case, L2 grads should x numGPU to keep the equivalence
-        loss_worker += num_gpu * nets[i].get_l2_loss()
+      loss_worker = nets[-1].loss + nets[-1].get_l2_loss()
       tower_grads.append(
         optimizer.compute_gradients(loss_worker, colocate_gradients_with_ops=True))
 
-      if i == num_gpu - 1:
-        print('Testing model on GPU %d' % gpu_list[i])
-        if num_gpu == 1:
-          tf.get_variable_scope().reuse_variables()
+      print('Testing model on CPU')
+      tf.get_variable_scope().reuse_variables()
 
-        batch_test = iterator_test.get_next()
-        nets.append(net(batch_test[0], batch_test[1], is_training=False))
-        error_batch_test = nets[-1].error
+      batch_test = iterator_test.get_next()
+      nets.append(net(batch_test[0], batch_test[1], is_training=False))
+      error_batch_test = nets[-1].error
 
   with tf.device('/cpu:0' if is_cpu_ps else worker):
     grad_batch_train = aggregate_gradients(tower_grads)
