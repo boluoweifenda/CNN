@@ -26,14 +26,12 @@ python3 download_and_convert_fashion.py
 Change your configurations in the file
 ```bash
 gedit source/opt.py
-```
-```bash
-gup_list=[0]
+gpu_list = [0]
 ```
 to use GPU0
 or
 ```bash
-gup_list=[]
+gpu_list = []
 ```
 to use cpu
 
