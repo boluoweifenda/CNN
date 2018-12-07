@@ -10,7 +10,6 @@ import numpy as np
 import time
 import os
 import tensorflow as tf
-import scipy.io as sio
 from tqdm import tqdm
 import glob
 import opts
@@ -85,15 +84,6 @@ def get_session(gpu_list):
   # Start the queue runners
   tf.train.start_queue_runners(sess=sess)
   return sess
-
-
-def export(list_of_numpy, name='W'):
-  mat_dict = {}
-  for i in range(len(list_of_numpy)):
-    mat_dict[name + '%d' % i] = list_of_numpy[i]
-  sio.savemat('../model/' + name + '.mat', mat_dict)
-  print('exported')
-
 
 def load_model(sess, name=None):
   base_dir = '../model/'
