@@ -13,7 +13,7 @@ NUM_SAMPLE = {'train': 60000, 'test': 10000}
 NUM_CLASSE = 10
 
 DESCRIPTION = {
-  'name': 'fashion',
+  'name': 'MNIST-FASHION',
   'image': 'A [28 x 28 x 1] grayscale image.',
   'label': 'A single integer between 0 and 9',
   'num_file_train': 1,

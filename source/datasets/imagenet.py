@@ -7,14 +7,13 @@ import tensorflow as tf
 
 from datasets import dataset
 
-
 FILE_PATTERN = '%s-*'
 FILE_LABEL = 'labels.txt'
 NUM_SAMPLE = {'train': 1281167, 'validation': 50000}
 NUM_CLASSE = 1000
 
 DESCRIPTION = {
-  'name': 'imagenet',
+  'name': 'ImageNet(ILSVRC2012)',
   'image': 'A color image of varying height and width.',
   'label': 'The label id of the image, integer between 0 and 999',
   'label_text': 'The text of the label.',
@@ -55,4 +54,3 @@ def get_split(split_name, dataset_dir, file_pattern=None):
     num_class=NUM_CLASSE,
     label=label,
     description=DESCRIPTION)
-
