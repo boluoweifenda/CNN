@@ -288,5 +288,6 @@ def run(dataset_dir=None):
 
 
 if __name__ == '__main__':
+  # use cpu to convert data
   os.environ['CUDA_VISIBLE_DEVICES'] = ''
   run()
