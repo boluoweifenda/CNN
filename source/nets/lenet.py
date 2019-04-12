@@ -26,4 +26,3 @@ class LeNet(Net):
     return x
 
 
-

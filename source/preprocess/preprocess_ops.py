@@ -17,13 +17,16 @@ def channel_normalize(x, mean, std):
   print('mean =', mean, 'std =', std)
   return std_r * (x - mean)
 
-def cutout(x, h, w):
-  random_h = tf.random_uniform(shape=[], minval=h // 2, maxval=h)
-  random_w = tf.random_uniform(shape=[], minval=w // 2, maxval=w)
-  mask = tf.ones(shape=[random_h, random_w, x.get_shape()[-1]], dtype=x.dtype)
 
-  mask_pad = tf.random_p(image, 40, 40)
-  x = tf.random_crop
+def cutout(x, h, w):
+
+  shape = x.get_shape().as_list()
+  mask = np.ones(shape=[2*shape[0], 2*shape[1]], dtype=np.float32)
+  mask[(shape[0]-h//2):(shape[0]+h//2), (shape[1]-w//2):(shape[1]+w//2)] = 0
+  mask = tf.constant(mask)
+  mask_crop = tf.random_crop(mask, [shape[0],shape[1]])
+
+  return x*mask_crop[:,:,None]
 
 
 

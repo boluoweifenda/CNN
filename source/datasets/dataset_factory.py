@@ -4,16 +4,27 @@ from __future__ import print_function
 
 from datasets import mnist
 from datasets import fashion
+from datasets import cifar10
+from datasets import cifar100
+from datasets import imagenet
 
 
 datasets_map = {
   'mnist': mnist,
   'fashion': fashion,
+  'cifar10': cifar10,
+  'cifar100': cifar100,
+  'imagenet': imagenet,
+  'imagenet256': imagenet,
 }
 
 dir_map = {
-  'mnist': '../data/mnist/',
-  'fashion': '../data/fashion/',
+  'mnist': '../../../datasets/mnist/',
+  'fashion': '../../../datasets/fashion/',
+  'cifar10': '../../../datasets/cifar10/',
+  'cifar100': '../../../datasets/cifar100/',
+  'imagenet': '/ILSVRC2012/TFRecord/',
+  # 'imagenet': '/data/wushuang/datasets/imagenet/TFRecord/',
 }
 
 

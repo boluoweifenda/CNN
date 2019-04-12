@@ -47,12 +47,17 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, see
 
     def map_func(record):
 
-      parsed = tf.parse_single_example(record, feature)
-      image = decoder(parsed['image/encoded'])
-      # Perform additional preprocessing on the parsed data.
-      image = image_preprocessing_fn(image, datasets, is_training=is_training)
-      label = parsed['image/class/label']
+      num_channel = 3 if name == 'imagenet' else 0
 
+      if preprocess_name != 'inception_v2':
+        parsed = tf.parse_single_example(record, feature)
+        image = decoder(parsed['image/encoded'], num_channel)
+        # Perform additional preprocessing on the parsed data.
+        image = image_preprocessing_fn(image, datasets, is_training=is_training)
+        label = parsed['image/class/label']
+      else:
+        from preprocess.inception_preprocess_v2 import parse_record
+        image, label = parse_record(record, is_training)
       label = tf.one_hot(label, num_class)
       return image, label
 

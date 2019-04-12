@@ -10,9 +10,29 @@ import numpy as np
 import time
 import os
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
+import scipy.io as sio
 from tqdm import tqdm
 import glob
-import opts
+
+import importlib
+import shutil
+
+
+
+OPTION_FILE = 'opts.py'
+
+
+def get_cpu_id(cpu_core):
+  if cpu_core is None:
+    return '0-39'
+  elif isinstance(cpu_core, str):
+    return cpu_core
+  cpu_id = ''
+  for core in cpu_core:
+    cpu_id = cpu_id + '%d,%d,' % (core, core + 20)
+  cpu_id = cpu_id[:-1]
+  return cpu_id
 
 
 def get_variable(key=None):
@@ -82,8 +102,17 @@ def get_session(gpu_list):
   sess = tf.InteractiveSession(config=create_config_proto())
   sess.run(tf.global_variables_initializer())
   # Start the queue runners
-  tf.train.start_queue_runners(sess=sess)
+  # tf.train.start_queue_runners(sess=sess)
   return sess
+
+
+def export(list_of_numpy, name='W'):
+  mat_dict = {}
+  for i in range(len(list_of_numpy)):
+    mat_dict[name + '%d' % i] = list_of_numpy[i]
+  sio.savemat('../model/' + name + '.mat', mat_dict)
+  print('exported')
+
 
 def load_model(sess, name=None):
   base_dir = '../model/'
@@ -125,6 +154,30 @@ def aggregate_statistics(tower_statistics):
     return tower_statistics[0]
 
 
+def delay4gpus(delay, gpu_list):
+  if isinstance(delay, bool):
+    if delay:
+      import pynvml
+      import time
+      pynvml.nvmlInit()
+      handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_list[0])
+      while True:
+        memory = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        usage = memory.used / memory.total
+        if usage < 0.2:
+          break
+        else:
+          print('GPU-%d is in use %.2f, still waiting' % (gpu_list[0], usage))
+        time.sleep(60)
+  elif isinstance(delay, int) or isinstance(delay, float):
+    import time
+    delay = int(delay)
+    for minute in tqdm(range(delay), desc='Wait:', leave=False, smoothing=0.1):
+      time.sleep(60)
+  else:
+    raise NotImplementedError('Wrong delay type')
+
+
 def main():
 
   ####################################################################################################
@@ -163,6 +216,7 @@ def main():
       num_check_log += 1
       title_temp = title + '_%d' % num_check_log
     else:
+      title = title_temp
       del num_check_log, title_temp
       break
 
@@ -175,7 +229,7 @@ def main():
   print(time_tag)
   print('SEED = %d' % seed)
 
-  print_opts('opts.py')
+  print_opts(OPTION_FILE)
   print_line()
 
   ####################################################################################################
@@ -194,18 +248,17 @@ def main():
   ####################################################################################################
 
   num_gpu = len(gpu_list)
-  num_split = num_gpu if num_gpu > 0 else 1
-
+  assert num_gpu > 0, 'Only support inference and training on GPU!'
   dataset_train = get_dataset(dataset, split='train')
   dataset_test = get_dataset(dataset, split='test')
 
   num_batch_train = dataset_train.num_sample // batch_size
   num_batch_test = dataset_test.num_sample // 100
 
-  assert batch_size % num_split == 0, 'batch_size %d can not be divided by number of gpus %d' % (batch_size, num_split)
+  assert batch_size % num_gpu == 0, 'batch_size %d can not be divided by number of gpus %d' % (batch_size, num_gpu)
 
-  iterator_train = get_batch(dataset_train, preprocess, True, batch_size // num_split, num_split, seed=seed)
-  iterator_test = get_batch(dataset_test, preprocess, False, 100, num_split, seed=seed)
+  iterator_train = get_batch(dataset_train, preprocess, True, batch_size // num_gpu, num_gpu, seed=seed)
+  iterator_test = get_batch(dataset_test, preprocess, False, 100, num_gpu, seed=seed)
 
   ####################################################################################################
 
@@ -221,7 +274,7 @@ def main():
 
     while(1):
       for batch in tqdm(range(num_batch), desc='Input pipeline', leave=False, smoothing=0.1):
-        sess.run(batch_input)
+        batch_input_ = sess.run(batch_input)
 
   ####################################################################################################
 
@@ -239,122 +292,85 @@ def main():
     print('Get L2 decay grads in the second GPU for speed')
     is_cpu_ps = True
   else:
-    print('Training with only CPU, maybe very slow')
-    print('All parameters are pinned to CPU, all Ops are pinned to CPU')
-    is_cpu_ps = True
+    raise NotImplementedError('Only support GPU training!')
 
   tower_grads = []
   tower_losses = []
   tower_errors = []
 
-  if num_gpu > 0:
-    # Loops over the number of GPUs and creates a copy ("tower") of the model on each GPU.
-    for i in range(num_gpu):
+  # Loops over the number of GPUs and creates a copy ("tower") of the model on each GPU.
+  for i in range(num_gpu):
 
-      worker = '/gpu:%d' % gpu_list[i]
+    # worker = '/gpu:%d' % gpu_list[i]
+    worker = '/gpu:%d' % i
 
-      # Creates a device setter used to determine where Ops are to be placed.
-      if is_cpu_ps:
-        # tf.train.replica_device_setter supports placing variables on the CPU, all
-        # on one GPU, or on ps_servers defined in a cluster_spec.
-        device_setter = tf.train.replica_device_setter(worker_device=worker, ps_device='/cpu:0', ps_tasks=1)
-      else:
-        device_setter = worker
+    # Creates a device setter used to determine where Ops are to be placed.
+    if is_cpu_ps:
+      # tf.train.replica_device_setter supports placing variables on the CPU, all
+      # on one GPU, or on ps_servers defined in a cluster_spec.
+      device_setter = tf.train.replica_device_setter(worker_device=worker, ps_device='/cpu:0', ps_tasks=1)
+    else:
+      device_setter = worker
 
-      '''
-      1. pin ops to GPU
-      2. pin parameters to CPU (multi-GPU training) or GPU (single-GPU training)
-      3. reuse parameters multi-GPU training
-  
-      # Creates variables on the first loop.  On subsequent loops reuse is set
-      # to True, which results in the "towers" sharing variables.
-      # tf.device calls the device_setter for each Op that is created.
-      # device_setter returns the device the Op is to be placed on.
-      '''
-      with tf.variable_scope(tf.get_variable_scope(), reuse=bool(i != 0)), \
-           tf.device(device_setter):
+    '''
+    1. pin ops to GPU
+    2. pin parameters to CPU (multi-GPU training) or GPU (single-GPU training)
+    3. reuse parameters multi-GPU training
 
-        print('Training model on GPU %d' % gpu_list[i])
+    # Creates variables on the first loop.  On subsequent loops reuse is set
+    # to True, which results in the "towers" sharing variables.
+    # tf.device calls the device_setter for each Op that is created.
+    # device_setter returns the device the Op is to be placed on.
+    '''
+    with tf.variable_scope(tf.get_variable_scope(), reuse=bool(i != 0)), \
+         tf.device(device_setter):
 
-        if mode == 'speed_net':
-          with tf.device('/cpu:0'):
-            # use fake data to test the computation speed on GPU
-            batch_train = iterator_train.get_next()
-            shape_x = [batch_size // num_gpu] + batch_train[0].get_shape().as_list()[1:]
-            shape_y = [batch_size // num_gpu] + batch_train[1].get_shape().as_list()[1:]
+      print('Training model on GPU %d' % gpu_list[i])
 
-            batch_train_x = tf.zeros(shape_x, dtype=tf.float32)
-            batch_train_y = tf.zeros(shape_y, dtype=tf.float32)
-          batch_train = [batch_train_x, batch_train_y]
-        else:
-          batch_train = iterator_train.get_next()
-
-        nets.append(net(batch_train[0], batch_train[1], is_training=True))
-
-        tower_losses.append(nets[i].loss)
-        tower_errors.append(nets[i].error)
-
-        if i == 0:
-          # We only get batchnorm moving average updates from data in the first GPU for speed.
-          update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-          nets[-1].total_parameters()
-          nets[-1].total_MACs()
-
-        loss_worker = nets[i].loss
-        if num_gpu == 1:
-          # Single-GPU training
-          loss_worker += nets[i].get_l2_loss()
-        elif i == 1:
-          # We only compute L2 grads in the second GPU for speed.
-          # In this case, L2 grads should x numGPU to keep the equivalence
-          loss_worker += num_gpu * nets[i].get_l2_loss()
-        tower_grads.append(
-          optimizer.compute_gradients(loss_worker, colocate_gradients_with_ops=True))
-
-        if i == num_gpu - 1:
-          print('Testing model on GPU %d' % gpu_list[i])
-          if num_gpu == 1:
-            tf.get_variable_scope().reuse_variables()
-
-          batch_test = iterator_test.get_next()
-          nets.append(net(batch_test[0], batch_test[1], is_training=False))
-          error_batch_test = nets[-1].error
-  else:
-    # training with only CPU
-    with tf.variable_scope(tf.get_variable_scope()), \
-         tf.device('/cpu:0'):
-      print('Training model on CPU')
       if mode == 'speed_net':
-        # use fake data to test the computation speed on GPU
-        batch_train = iterator_train.get_next()
-        shape_x = [batch_size // num_gpu] + batch_train[0].get_shape().as_list()[1:]
-        shape_y = [batch_size // num_gpu] + batch_train[1].get_shape().as_list()[1:]
+        with tf.device('/cpu:0'):
+          # use fake data to test the computation speed on GPU
+          batch_train = iterator_train.get_next()
+          shape_x = [batch_size // num_gpu] + batch_train[0].get_shape().as_list()[1:]
+          shape_y = [batch_size // num_gpu] + batch_train[1].get_shape().as_list()[1:]
 
-        batch_train_x = tf.zeros(shape_x, dtype=tf.float32)
-        batch_train_y = tf.zeros(shape_y, dtype=tf.float32)
+          batch_train_x = tf.zeros(shape_x, dtype=tf.float32)
+          batch_train_y = tf.zeros(shape_y, dtype=tf.float32)
         batch_train = [batch_train_x, batch_train_y]
       else:
         batch_train = iterator_train.get_next()
 
       nets.append(net(batch_train[0], batch_train[1], is_training=True))
 
-      tower_losses.append(nets[-1].loss)
-      tower_errors.append(nets[-1].error)
+      tower_losses.append(nets[i].loss)
+      tower_errors.append(nets[i].error)
 
-      update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-      nets[-1].total_parameters()
-      nets[-1].total_MACs()
+      if i == 0:
+        # We only get batchnorm moving average updates from data in the first GPU for speed.
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        nets[-1].total_parameters()
+        nets[-1].total_MACs()
+        nets[-1].total_MEMs()
 
-      loss_worker = nets[-1].loss + nets[-1].get_l2_loss()
+      loss_worker = nets[i].loss
+      if num_gpu == 1:
+        # Single-GPU training
+        loss_worker += nets[i].get_l2_loss()
+      elif i == 1:
+        # We only compute L2 grads in the second GPU for speed.
+        # In this case, L2 grads should x numGPU to keep the equivalence
+        loss_worker += num_gpu * nets[i].get_l2_loss()
       tower_grads.append(
         optimizer.compute_gradients(loss_worker, colocate_gradients_with_ops=True))
 
-      print('Testing model on CPU')
-      tf.get_variable_scope().reuse_variables()
+      if i == num_gpu - 1:
+        print('Testing model on GPU %d' % gpu_list[i])
+        if num_gpu == 1:
+          tf.get_variable_scope().reuse_variables()
 
-      batch_test = iterator_test.get_next()
-      nets.append(net(batch_test[0], batch_test[1], is_training=False))
-      error_batch_test = nets[-1].error
+        batch_test = iterator_test.get_next()
+        nets.append(net(batch_test[0], batch_test[1], is_training=False))
+        error_batch_test = nets[-1].error
 
   with tf.device('/cpu:0' if is_cpu_ps else worker):
     grad_batch_train = aggregate_gradients(tower_grads)
@@ -366,13 +382,70 @@ def main():
 
   ####################################################################################################
 
+  if hasattr(opts, 'delay'):
+    delay4gpus(opts.delay, gpu_list=gpu_list)
+
+
   sess = get_session(gpu_list)
   saver = tf.train.Saver(max_to_keep=None)
 
   def evaluate():
-    error_test = 0.
-    for _ in tqdm(range(num_batch_test), desc='Test', leave=False, smoothing=0.1):
-      error_test += sess.run([error_batch_test])[0]
+
+    extract_FM = False
+
+
+    if not extract_FM:
+
+      error_test = 0.
+      for _ in tqdm(range(num_batch_test), desc='Test', leave=False, smoothing=0.1):
+        error_test += sess.run([error_batch_test])[0]
+    else:
+
+
+      H_out_sum = []
+      H_out_sum.append(np.zeros(shape=[32,32], dtype=np.float32))
+      for i in range(18):
+        H_out_sum.append(np.zeros(shape=[32,32], dtype=np.float32))
+      for i in range(18):
+        H_out_sum.append(np.zeros(shape=[16,16], dtype=np.float32))
+      for i in range(18):
+        H_out_sum.append(np.zeros(shape=[8,8], dtype=np.float32))
+
+
+
+      error_test = 0.
+      for _ in tqdm(range(num_batch_test), desc='Test', leave=False):
+        # error_test += sess.run([error_batch_test])[0]
+        error_test_delta, H_out = sess.run([error_batch_test, nets[-1].collect])
+        error_test += error_test_delta
+
+        for i in range(55):
+          H_out_sum[i] += H_out[i]
+
+      for i in range(55):
+        H_out_sum[i] = H_out_sum[i]/num_batch_test
+      export(H_out_sum, name='FM')
+
+
+      # H0 = []
+      # H1 = []
+      # H2 = []
+      # error_test = 0.
+      # for _ in tqdm(range(num_batch_test), desc='Test', leave=False):
+      #   # error_test += sess.run([error_batch_test])[0]
+      #   error_test_delta, H_out = sess.run([error_batch_test, nets[-1].collect])
+      #   error_test += error_test_delta
+      #   H0.append(H_out[0])
+      #   H1.append(H_out[1])
+      #   H2.append(H_out[2])
+      # H0 = np.vstack(H0)
+      # H1 = np.vstack(H1)
+      # H2 = np.vstack(H2)
+      # export([H0,H1,H2], name='FM')
+
+
+
+
     return error_test / num_batch_test
 
   def load_model(path):
@@ -389,6 +462,8 @@ def main():
     print('Test: %.4f' % error_test_best)
 
   if mode == 'test':
+    error_test_best = evaluate()
+    print('Test: %.4f' % error_test_best)
     exit(0)
 
   if mode == 'export':
@@ -399,6 +474,8 @@ def main():
 
   if mode == 'restart':
     sess.run(epoch_step.assign(90))
+
+
 
   print_line()
 
@@ -459,9 +536,31 @@ def main():
   ####################################################################################################
 
 if __name__ == '__main__':
+
   with tf.device('/cpu:0'):
-    main()
-  exit(0)
+
+    import opts
+
+    if hasattr(opts, 'repeat'):
+      repeat = opts.repeat
+    else:
+      repeat = 1
+
+    if repeat > 1:
+      opts_temp = 'opts_' + get_time('%y-%m-%d %X')
+      OPTION_FILE = opts_temp + '.py'
+      shutil.copy('opts.py',  OPTION_FILE)
+      opts = importlib.import_module(opts_temp)
+
+    for i in range(repeat):
+      tf.reset_default_graph()
+      importlib.reload(opts)
+      main()
+
+    if repeat > 1:
+      os.remove(opts_temp + '.py')
+
+    exit(0)
 
 
 
