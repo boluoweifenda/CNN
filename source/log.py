@@ -1,6 +1,6 @@
 import sys
 
-
+# this class redirects and duplicates the console information, e.g., print('xxxxx') to a writable file
 class Log(object):
   def __init__(self, *args):
     self.f = open(*args)
