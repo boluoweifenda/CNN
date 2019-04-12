@@ -1,26 +1,13 @@
 import tensorflow as tf
 
-# title = 'Wide-DenseNet BC, C10, K32, depthwise, no relu after conv1x1'
-# title = 'shufflenet_v2, 1.5x, lr 0.1, relu6'
-# title = 'vgg7, batchsize 64, epoch 300'
-# title = 'ResNet-74, C10, conv4x4, sp'
-# title = 'DenseNet C100 L94 K12, conv2x2'
-# title = 'mobilenet-v2, 1.4x, lr 0.1'
-# title = 'ResNet-50, 0.5x, L2 4e-5, lr 0.1, conv2x2, remove conv2x2 L2'
-# title = 'shufflenet-v2, conv2x2_sp BC, relu after conv2x2'
-# title = 'Wide-DenseNet, BC, 988, K48, 600 epoch, conv2x2, normalize first, cutout'
-# title = 'DenseNet121, cosine, inception, conv3x3'
-
-
-
 title = 'temp'
 mode = 'speed_net'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 'input_test', 'speed_net'
 seed = None
-# repeat = 3
+repeat = 1
 delay = False  # start training after xxx minutes
 gpu_list = [0,1]
 batch_size = 256
-# interp = 0.5
+interp = 0.5
 
 dataset = 'imagenet'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'
 preprocess = 'inception_v2'  # 'mnist', 'cifar', 'alexnet', 'inception_v2'

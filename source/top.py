@@ -19,7 +19,6 @@ import importlib
 import shutil
 
 
-
 OPTION_FILE = 'opts.py'
 
 
@@ -101,8 +100,6 @@ def get_session(gpu_list):
   # os.environ['TF_ENABLE_WINOGRAD_NONFUSED'] = '1'
   sess = tf.InteractiveSession(config=create_config_proto())
   sess.run(tf.global_variables_initializer())
-  # Start the queue runners
-  # tf.train.start_queue_runners(sess=sess)
   return sess
 
 
@@ -385,14 +382,12 @@ def main():
   if hasattr(opts, 'delay'):
     delay4gpus(opts.delay, gpu_list=gpu_list)
 
-
   sess = get_session(gpu_list)
   saver = tf.train.Saver(max_to_keep=None)
 
   def evaluate():
 
     extract_FM = False
-
 
     if not extract_FM:
 
@@ -443,9 +438,6 @@ def main():
       # H2 = np.vstack(H2)
       # export([H0,H1,H2], name='FM')
 
-
-
-
     return error_test / num_batch_test
 
   def load_model(path):
@@ -474,8 +466,6 @@ def main():
 
   if mode == 'restart':
     sess.run(epoch_step.assign(90))
-
-
 
   print_line()
 
@@ -535,31 +525,25 @@ def main():
 
   ####################################################################################################
 
+
 if __name__ == '__main__':
 
   with tf.device('/cpu:0'):
 
     import opts
-
-    if hasattr(opts, 'repeat'):
-      repeat = opts.repeat
-    else:
-      repeat = 1
-
+    repeat = opts.repeat
     if repeat > 1:
+      print('multiple runs, we buffer the configuration file')
       opts_temp = 'opts_' + get_time('%y-%m-%d %X')
       OPTION_FILE = opts_temp + '.py'
       shutil.copy('opts.py',  OPTION_FILE)
       opts = importlib.import_module(opts_temp)
-
     for i in range(repeat):
       tf.reset_default_graph()
       importlib.reload(opts)
       main()
-
     if repeat > 1:
       os.remove(opts_temp + '.py')
-
     exit(0)
 
 
