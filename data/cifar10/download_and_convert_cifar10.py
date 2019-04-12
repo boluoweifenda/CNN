@@ -157,7 +157,6 @@ def run(dataset_dir=None):
   if dataset_dir is None:
     dataset_dir = os.getcwd()
 
-
   if not tf.gfile.Exists(dataset_dir):
     tf.gfile.MakeDirs(dataset_dir)
 

@@ -128,7 +128,6 @@ _CLASS_NAMES = [
 LABELS_FILENAME = 'labels.txt'
 
 
-
 def int64_feature(values):
   if not isinstance(values, (tuple, list)):
     values = [values]
@@ -245,7 +244,6 @@ def _download_and_uncompress_dataset(dataset_dir):
   tarfile.open(filepath, 'r:gz').extractall(dataset_dir)
 
 
-
 def run(dataset_dir=None):
 
   if dataset_dir is None:
@@ -288,6 +286,7 @@ def run(dataset_dir=None):
 
 
 if __name__ == '__main__':
+
   # use cpu to convert data
   os.environ['CUDA_VISIBLE_DEVICES'] = ''
   run()
