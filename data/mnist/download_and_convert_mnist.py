@@ -95,8 +95,6 @@ def read_label_file(dataset_dir, filename=LABELS_FILENAME):
   return labels_to_class_names
 
 
-
-
 def _extract_images(filename, num_images):
 
   print('Extracting images from: ', filename)
@@ -164,6 +162,7 @@ def _download_dataset(dataset_dir):
 
     if not os.path.exists(filepath):
       print('Downloading file %s...' % filename)
+
       def _progress(count, block_size, total_size):
         sys.stdout.write('\r>> Downloading %.1f%%' % (
             float(count * block_size) / float(total_size) * 100.0))

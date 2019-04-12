@@ -150,6 +150,7 @@ def _download_dataset(dataset_dir):
 
     if not os.path.exists(filepath):
       print('Downloading file %s...' % filename)
+
       def _progress(count, block_size, total_size):
         sys.stdout.write('\r>> Downloading %.1f%%' % (
             float(count * block_size) / float(total_size) * 100.0))
