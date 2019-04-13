@@ -29,7 +29,6 @@ def cutout(x, h, w):
   return x*mask_crop[:,:,None]
 
 
-
 def central_crop(image, crop_height, crop_width):
   """Performs central crops of the given image list.
   Args:
@@ -110,7 +109,6 @@ def resize_image(image, height, width):
   return tf.image.resize_images(
       image, [height, width], method=tf.image.ResizeMethod.BILINEAR,
       align_corners=False)
-
 
 
 def apply_with_random_selector(x, func, num_cases):

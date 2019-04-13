@@ -9,6 +9,7 @@ from preprocess.preprocess_ops import cutout
 CUTOUT = False
 NORMALIZATION_FIRST = False
 
+
 def preprocess_image(image, dataset, is_training=False):
 
   print('cifar preprocess, cutout=%s, normalization_first=%s' %(CUTOUT, NORMALIZATION_FIRST))
@@ -33,10 +34,6 @@ def preprocess_image(image, dataset, is_training=False):
     image = tf.image.resize_image_with_crop_or_pad(image, 40, 40)
     image = tf.random_crop(image, [32, 32, 3])
     image = tf.image.random_flip_left_right(image)
-
-    # if COLOR:
-    #   image = tf.image.random_brightness(image, max_delta=63)
-    #   image = tf.image.random_contrast(image, lower=0.2, upper=1.8)
 
     if CUTOUT:
       image = cutout(image, 16, 16)
