@@ -10,16 +10,17 @@ import numpy as np
 import time
 import os
 import tensorflow as tf
-import tensorflow.contrib.slim as slim
 import scipy.io as sio
 from tqdm import tqdm
 import glob
-
+import argparse
 import importlib
 import shutil
 
-
-OPTION_FILE = 'opts.py'
+parser = argparse.ArgumentParser()
+parser.add_argument('--opts', '-o', default='opts_mlp_mnist', help='options file name')
+args = parser.parse_args()
+OPTION = args.opts
 
 
 def get_cpu_id(cpu_core):
@@ -226,7 +227,7 @@ def main():
   print(time_tag)
   print('SEED = %d' % seed)
 
-  print_opts(OPTION_FILE)
+  print_opts('options/' + OPTION + '.py')
   print_line()
 
   ####################################################################################################
@@ -337,7 +338,7 @@ def main():
       else:
         batch_train = iterator_train.get_next()
 
-      nets.append(net(batch_train[0], batch_train[1], is_training=True))
+      nets.append(net(batch_train[0], batch_train[1], opts=opts, is_training=True))
 
       tower_losses.append(nets[i].loss)
       tower_errors.append(nets[i].error)
@@ -366,7 +367,7 @@ def main():
           tf.get_variable_scope().reuse_variables()
 
         batch_test = iterator_test.get_next()
-        nets.append(net(batch_test[0], batch_test[1], is_training=False))
+        nets.append(net(batch_test[0], batch_test[1], opts=opts, is_training=False))
         error_batch_test = nets[-1].error
 
   with tf.device('/cpu:0' if is_cpu_ps else worker):
@@ -528,23 +529,16 @@ def main():
 
 if __name__ == '__main__':
 
-  with tf.device('/cpu:0'):
-
-    import opts
-    repeat = opts.repeat
-    if repeat > 1:
-      print('multiple runs, we buffer the configuration file')
-      opts_temp = 'opts_' + get_time('%y-%m-%d %X')
-      OPTION_FILE = opts_temp + '.py'
-      shutil.copy('opts.py',  OPTION_FILE)
-      opts = importlib.import_module(opts_temp)
-    for i in range(repeat):
-      tf.reset_default_graph()
-      importlib.reload(opts)
+  opts = importlib.import_module('options.' + OPTION)
+  repeat = opts.repeat
+  if repeat > 1:
+    print('multiple runs, DO NOT EDIT the option file until the last run starts !!!')
+  for i in range(repeat):
+    tf.reset_default_graph()
+    importlib.reload(opts)
+    with tf.device('/cpu:0'):
       main()
-    if repeat > 1:
-      os.remove(opts_temp + '.py')
-    exit(0)
+  exit(0)
 
 
 

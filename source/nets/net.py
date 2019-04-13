@@ -6,7 +6,6 @@ from functools import reduce
 
 import tensorflow as tf
 import numpy as np
-import opts
 from tensorflow.contrib.layers import batch_norm
 from tensorflow.contrib.layers import instance_norm
 from tensorflow.contrib.layers import variance_scaling_initializer
@@ -15,7 +14,7 @@ import warnings
 
 
 class Net(object):
-  def __init__(self, x, y, is_training=True):
+  def __init__(self, x, y, opts, is_training=True):
 
     print('Perform input channel normalization in GPU for speed')
 
@@ -26,7 +25,7 @@ class Net(object):
       warnings.warn('input datatype for network is not float32, please check the preprocessing')
       x = tf.cast(x, dtype=tf.float32)
 
-    if dataset == 'imagenet':
+    if dataset in ['imagenet', 'imagenet256']:
       mean = [0.485, 0.456, 0.406]
       std = [0.229, 0.224, 0.225]
       if preprocess == 'alexnet':
@@ -61,7 +60,7 @@ class Net(object):
     self.collect = []
     self.y = y
     self.learning_step = opts.learning_step
-
+    self.batch_size = opts.batch_size
     self.gpu_list = opts.gpu_list
     self.l2_decay = opts.l2_decay
     self.loss_func = opts.loss_func
@@ -369,7 +368,7 @@ class Net(object):
     total = 0
     for MEM in self.MEMs:
       total += MEM[1]
-    total = total * opts.batch_size * 4 // (1024*1024)
+    total = total * self.batch_size * 4 // (1024*1024)
     print('MEMs:', total)
     return total
 
