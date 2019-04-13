@@ -13,8 +13,8 @@ NUM_SAMPLE = {'train': 1281167, 'validation': 50000}
 NUM_CLASSE = 1000
 
 DESCRIPTION = {
-  'name': 'imagenet',
-  'image': 'A color image of varying height and width.',
+  'name': 'imagenet256',
+  'image': 'A color resized image of 256x256 resolution.',
   'label': 'The label id of the image, integer between 0 and 999',
   'label_text': 'The text of the label.',
   'object/bbox': 'A list of bounding boxes.',

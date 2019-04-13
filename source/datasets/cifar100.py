@@ -13,7 +13,7 @@ NUM_SAMPLE = {'train': 50000, 'test': 10000}
 NUM_CLASSE = 100
 
 DESCRIPTION = {
-  'name': 'CIFAR-100',
+  'name': 'cifar100',
   'image': 'A [32 x 32 x 3] color image.',
   'label': 'A single integer between 0 and 99',
   'num_file_train': 1,
