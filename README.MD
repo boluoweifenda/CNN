@@ -1,9 +1,9 @@
-# Exercise for Tsinghua lecture: Neuromorphic Computing Theory and System
+# A simplified project based on TensorFlow-Slim image classification model library
 
 Code example for convolutional neural network training
 
 ## Prerequisites
-- A computer with NVIDIA GPUs (Please, it is important)
+- A computer with NVIDIA GPUs
 - CUDA + CuDNN
 - Tensorflow (GPU version)
 - python3
@@ -11,15 +11,9 @@ Code example for convolutional neural network training
 
 
 ## Data
-Download and generate mnist and fashion datasets:
+Download and generate mnist, fashion and cifar datasets by:
 ```bash
-cd data/mnist/
-python3 download_and_convert_mnist.py
-```
-and
-```bash
-cd data/fashion
-python3 download_and_convert_fashion.py
+python3 data/xxx/download_and_convert_xxx.py
 ```
 
 ## Config training devices
@@ -66,4 +60,7 @@ The training log files will be saved in log/xxxx.txt
 You can check the training details in log files, and derive statistics for drawing curves.
 
 And the model will be saved in model/xxxx if you have configured in opt.py
+
+
+## Exercise for Tsinghua lecture: Neuromorphic Computing Theory and System
 
