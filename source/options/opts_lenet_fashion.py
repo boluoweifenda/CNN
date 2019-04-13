@@ -7,7 +7,7 @@ repeat = 1
 delay = False  # start training after xxx minutes
 gpu_list = [0]
 batch_size = 128
-interp = 0
+mixup = 0
 
 dataset = 'fashion'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'
 preprocess = 'mnist'  # 'mnist', 'cifar', 'alexnet', 'inception_v2'

@@ -22,7 +22,9 @@ dir_map = {
   'fashion': '../../../datasets/fashion/',
   'cifar10': '../../../datasets/cifar10/',
   'cifar100': '../../../datasets/cifar100/',
-  'imagenet': '/TFRecord/',  # we move imagenet dataset to SSD for better reading speed
+  'imagenet': '/imagenet/TFRecord/',  # we move imagenet dataset to SSD for better reading speed
+  'imagenet256': '/imagenet/TFRecord256/',  # we move imagenet dataset to SSD for better reading speed
+
 }
 
 

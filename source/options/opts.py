@@ -7,16 +7,16 @@ repeat = 1
 delay = False  # start training after xxx minutes
 gpu_list = [0, 1]
 batch_size = 256
-interp = 0.5
+mixup = 0.5
 
 dataset = 'imagenet'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'
 preprocess = 'inception_v2'  # 'mnist', 'cifar', 'alexnet', 'inception_v2'
 network = 'mobilenet_v2'  # 'mlp', 'lenet', 'alexnet', 'densenet_test', 'resnet_test', 'mobilenet_v1', 'mobilenet_v2', shufflenet_v2
 
 path_load = None
-# path_save = None
+path_save = None
 # path_load = '18-11-07*conv2x2*random*save'    # None, or specify a dir or key word in default dir
-path_save = True   # None, False, True, or specify a dir
+# path_save = True   # None, False, True, or specify a dir
 
 l2_decay = {'decay': 1e-4, 'exclude': ['depthwise']}
 # l2_decay = {'decay': 5e-4, 'exclude': ['depthwise']}  # alexnet

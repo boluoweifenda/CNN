@@ -12,6 +12,8 @@ from tensorflow.contrib.layers import variance_scaling_initializer
 from preprocess.preprocess_ops import channel_normalize
 import warnings
 
+DATA_FORMAT = 'NCHW'
+
 
 class Net(object):
   def __init__(self, x, y, opts, is_training=True):
@@ -38,7 +40,7 @@ class Net(object):
     else:
       print('No normalization in GPU for dataset %s' % dataset)
 
-    if self._shape(x)[1] != 1 and self._shape(x)[1] != 3:
+    if DATA_FORMAT is 'NCHW':
       print('Input data format is NHWC, convert to NCHW')
       x = tf.transpose(x,[0,3,1,2])
 
@@ -46,15 +48,7 @@ class Net(object):
     self.shape_x = self._shape(x)
     self.shape_y = self._shape(y)
 
-    interp = opts.interp
-    if 0 < interp <= 1 and is_training:
-      print('interp=%.1f, use mixup input data augmentation' % interp)
-      random = tf.random_uniform([tf.shape(x)[0], 1, 1, 1], minval=0, maxval=interp, dtype=tf.float32)
-      x_slide = tf.concat([x[1:, ...], x[0:1, ...]], axis=0)
-      y_slide = tf.concat([y[1:, ...], y[0:1, ...]], axis=0)
-      x = random * x + (1 - random) * x_slide
-      random_squeeze = random[:, 0:, 0, 0]
-      y = random_squeeze * y + (1 - random_squeeze) * y_slide
+    x, y = self._mixup(x, y, alpha=opts.mixup)
 
     self.H = [x]
     self.collect = []
@@ -175,6 +169,23 @@ class Net(object):
     x_transposed = tf.transpose(x_reshaped, [0, 2, 1, 3, 4])
     out = tf.reshape(x_transposed, [-1, c, h, w])
     return out
+
+  def _mixup(self, x, y, alpha):
+    if 0 < alpha <= 1 and self.is_training:
+      print('use mixup input data augmentation, alpha=' % alpha)
+      random = tf.random_uniform([tf.shape(x)[0], 1, 1, 1], minval=0, maxval=alpha, dtype=tf.float32)
+      x_slide = tf.concat([x[1:, ...], x[0:1, ...]], axis=0)
+      y_slide = tf.concat([y[1:, ...], y[0:1, ...]], axis=0)
+      x_mixed = random * x + (1 - random) * x_slide
+      random_squeeze = random[:, 0:, 0, 0]
+      y_mixed = random_squeeze * y + (1 - random_squeeze) * y_slide
+    return x_mixed, y_mixed
+
+
+
+
+
+
 
   def _group_conv(self, x, ksize, c_out, num_group=None, stride=1, padding='SAME', shuffle=False, name='group_conv'):
     c_in = self._shape(x)[1]

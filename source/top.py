@@ -15,10 +15,9 @@ from tqdm import tqdm
 import glob
 import argparse
 import importlib
-import shutil
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--opts', '-o', default='opts_mlp_mnist', help='options file name')
+parser.add_argument('--opts', '-o', default='opts', help='options file name')
 args = parser.parse_args()
 OPTION = args.opts
 
