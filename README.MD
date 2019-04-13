@@ -10,12 +10,15 @@ Code example for convolutional neural network training
 - tqdm
 
 
-## Data
+## Preparing datasets
 Download and generate mnist, fashion and cifar datasets by:
 ```bash
 python3 data/xxx/download_and_convert_xxx.py
 ```
+For imagenet, please follow the instructions in 
 
+
+and change the file destination in  to the converted tfrecord file 
 ## Config training devices
 Change your configurations in the file
 ```bash
@@ -60,7 +63,7 @@ The training log files will be saved in log/xxxx.txt
 You can check the training details in log files, and derive statistics for drawing curves.
 
 And the model will be saved in model/xxxx if you have configured in opt.py
-
+a
 
 ## Exercise for Tsinghua lecture: Neuromorphic Computing Theory and System
 
