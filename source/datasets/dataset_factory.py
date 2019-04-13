@@ -15,7 +15,6 @@ datasets_map = {
   'cifar10': cifar10,
   'cifar100': cifar100,
   'imagenet': imagenet,
-  'imagenet256': imagenet,
 }
 
 dir_map = {
@@ -23,8 +22,7 @@ dir_map = {
   'fashion': '../../../datasets/fashion/',
   'cifar10': '../../../datasets/cifar10/',
   'cifar100': '../../../datasets/cifar100/',
-  'imagenet': '/ILSVRC2012/TFRecord/',
-  # 'imagenet': '/data/wushuang/datasets/imagenet/TFRecord/',
+  'imagenet': '/TFRecord/',  # we move imagenet dataset to SSD for better reading speed
 }
 
 
