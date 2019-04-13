@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-title = 'temp'
+title = 'Tsinghua lecture experiment 2'
 mode = 'train'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 'input_test', 'speed_net'
 seed = None
 repeat = 1
