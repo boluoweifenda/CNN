@@ -41,35 +41,26 @@ class Net(object):
 
     if self._shape(x)[1] != 1 and self._shape(x)[1] != 3:
       print('Input data format is NHWC, convert to NCHW')
-      # image_size = tf.train.piecewise_constant(opts.epoch_step, boundaries=[20, 40, 60, 80], values=[96, 128, 160, 192, 224])
-      # x = tf.image.resize_images(x, [image_size,image_size])
       x = tf.transpose(x,[0,3,1,2])
-
 
     self.is_training = is_training
     self.shape_x = self._shape(x)
     self.shape_y = self._shape(y)
 
-
-
-    if hasattr(opts, 'interp'):
-      interp = opts.interp
-      if 0 < interp <= 1 and is_training:
-        print('interp=%.1f, use input data interpolation' % interp)
-
-        random = tf.random_uniform([tf.shape(x)[0], 1, 1, 1], minval=0, maxval=interp, dtype=tf.float32)
-        x_slide = tf.concat([x[1:, ...], x[0:1, ...]], axis=0)
-        y_slide = tf.concat([y[1:, ...], y[0:1, ...]], axis=0)
-        x = random * x + (1 - random) * x_slide
-        random_squeeze = random[:, 0:, 0, 0]
-        y = random_squeeze * y + (1 - random_squeeze) * y_slide
-
+    interp = opts.interp
+    if 0 < interp <= 1 and is_training:
+      print('interp=%.1f, use mixup input data augmentation' % interp)
+      random = tf.random_uniform([tf.shape(x)[0], 1, 1, 1], minval=0, maxval=interp, dtype=tf.float32)
+      x_slide = tf.concat([x[1:, ...], x[0:1, ...]], axis=0)
+      y_slide = tf.concat([y[1:, ...], y[0:1, ...]], axis=0)
+      x = random * x + (1 - random) * x_slide
+      random_squeeze = random[:, 0:, 0, 0]
+      y = random_squeeze * y + (1 - random_squeeze) * y_slide
 
     self.H = [x]
     self.collect = []
     self.y = y
     self.learning_step = opts.learning_step
-
 
     self.gpu_list = opts.gpu_list
     self.l2_decay = opts.l2_decay
@@ -87,10 +78,6 @@ class Net(object):
     self.out = self.model(self.H[-1])
 
     self._loss(self.out, self.y)
-
-
-
-    
 
   def model(self, x):
     raise NotImplementedError('Basic class, none network model is defined!')
@@ -179,7 +166,6 @@ class Net(object):
     MEMs = shape_out[-1]*shape_out[-2]*shape_out[-3]
     self.MEMs.append([name, MEMs])
 
-
     return x
 
   def _channel_shuffle(self, x, num_group):
@@ -221,7 +207,6 @@ class Net(object):
 
     MEMs = shape_out[-1]*shape_out[-2]*shape_out[-3]
     self.MEMs.append([name, MEMs])
-
 
     return x
 
@@ -286,7 +271,6 @@ class Net(object):
     MEMs = c_out
     self.MEMs.append([name, MEMs])
 
-
     return x
 
   def _scale(self, x, name='scale', data_format='NCHW'):
@@ -342,7 +326,6 @@ class Net(object):
     MEMs = shape_out[-1]*shape_out[-2]*shape_out[-3]
     self.MEMs.append(['batchnorm', MEMs])
 
-
     return x
 
   def total_parameters(self):
@@ -390,7 +373,6 @@ class Net(object):
     print('MEMs:', total)
     return total
 
-
   def get_l2_loss(self):
     decay = self.l2_decay['decay']
     if decay > 0:
@@ -413,21 +395,5 @@ class Net(object):
     else:
       print('No L2 weight decay')
       return 0.0
-
-
-
-
-    # if hasattr(opts, 'ensemble'):
-    #   if is_training:
-    #     x_slide = tf.concat([x[1:, ...], x[0:1, ...]], axis=0)
-    #     y_slide = tf.concat([y[1:, ...], y[0:1, ...]], axis=0)
-    #   else:
-    #     x_slide = x
-    #     y_slide = y
-    #
-    #   x = tf.concat([x, x_slide], axis=1)
-    #   y = 0.5*(y + y_slide)
-      # y = tf.concat([y, y_slide], axis=0)
-      # self.shape_y[-1] = 2 * self.shape_y[-1]
 
 
