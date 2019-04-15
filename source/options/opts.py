@@ -1,17 +1,17 @@
 import tensorflow as tf
 
 title = 'temp'
-mode = 'speed_net'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 'input_test', 'speed_net'
+mode = 'train'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 'input_test', 'speed_net'
 seed = None
 repeat = 1
 delay = False  # start training after xxx minutes
-gpu_list = [0, 1]
+gpu_list = []
 batch_size = 256
-mixup = 0.5
+mixup = 0
 
-dataset = 'imagenet'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'
-preprocess = 'inception_v2'  # 'mnist', 'cifar', 'alexnet', 'inception_v2'
-network = 'mobilenet_v2'  # 'mlp', 'lenet', 'alexnet', 'densenet_test', 'resnet_test', 'mobilenet_v1', 'mobilenet_v2', shufflenet_v2
+dataset = 'mnist'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'
+preprocess = 'mnist'  # 'mnist', 'cifar', 'alexnet', 'inception_v2'
+network = 'lenet'  # 'mlp', 'lenet', 'alexnet', 'densenet_test', 'resnet_test', 'mobilenet_v1', 'mobilenet_v2', shufflenet_v2
 
 path_load = None
 path_save = None

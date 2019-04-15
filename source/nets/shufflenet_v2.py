@@ -4,11 +4,11 @@ from nets.net import Net
 
 class ShuffleNet(Net):
 
-  def _activation(self, x):
+  def activation(self, x):
     return tf.nn.relu6(x)
 
-  def _channel_shuffle(self, x, num_group):
-    n, c, h, w = self._shape(x)
+  def shuffle_channel(self, x, num_group):
+    n, c, h, w = self.get_shape(x)
     assert c%num_group == 0
 
     x_reshaped = tf.reshape(x, [-1, num_group, c//num_group, h, w])
@@ -22,28 +22,28 @@ class ShuffleNet(Net):
       return x
 
     with tf.variable_scope('DW'):
-      x = self._depthwise_conv(x, 3, stride=stride)
-      x = self._batch_norm(x)
+      x = self.depthwise_conv(x, 3, stride=stride)
+      x = self.batch_norm(x)
     with tf.variable_scope('C1'):
-      x = self._conv(x, 1, c_out)
-      x = self._batch_norm(x)
-      x = self._activation(x)
+      x = self.conv(x, 1, c_out)
+      x = self.batch_norm(x)
+      x = self.activation(x)
 
     return x
 
   def _branch1(self, x, c_out, stride=1):
 
     with tf.variable_scope('C0'):
-      x = self._conv(x, 1, c_out)
-      x = self._batch_norm(x)
-      x = self._activation(x)
+      x = self.conv(x, 1, c_out)
+      x = self.batch_norm(x)
+      x = self.activation(x)
     with tf.variable_scope('DW'):
-      x = self._depthwise_conv(x, 3, stride=stride)
-      x = self._batch_norm(x)
+      x = self.depthwise_conv(x, 3, stride=stride)
+      x = self.batch_norm(x)
     with tf.variable_scope('C1'):
-      x = self._conv(x, 1, c_out)
-      x = self._batch_norm(x)
-      x = self._activation(x)
+      x = self.conv(x, 1, c_out)
+      x = self.batch_norm(x)
+      x = self.activation(x)
 
     return x
 
@@ -63,7 +63,7 @@ class ShuffleNet(Net):
       x1 = self._branch1(x1, c_out=c_out, stride=stride)
 
     x = tf.concat([x0, x1], axis=1)
-    x = self._channel_shuffle(x, num_group=2)
+    x = self.shuffle_channel(x, num_group=2)
 
     return x
 
@@ -76,10 +76,10 @@ class ShuffleNet(Net):
     # Out = [244, 488, 976, 2048]
 
     with tf.variable_scope('init'):
-      x = self._conv(x, 3, 24, stride=2)
-      x = self._batch_norm(x)
-      x = self._activation(x)
-      x = self._pool(x, type='MAX', ksize=3, stride=2)
+      x = self.conv(x, 3, 24, stride=2)
+      x = self.batch_norm(x)
+      x = self.activation(x)
+      x = self.pool(x, type='MAX', ksize=3, stride=2)
 
     for stage in range(len(Repeat)):
       with tf.variable_scope('S%d' % stage):
@@ -88,14 +88,14 @@ class ShuffleNet(Net):
             x = self._basic(x, c_out=Out[stage], stride=2 if repeat is 0 else 1)
 
     with tf.variable_scope('last'):
-      x = self._conv(x, 1, Out[-1])
-      x = self._batch_norm(x)
-      x = self._activation(x)
+      x = self.conv(x, 1, Out[-1])
+      x = self.batch_norm(x)
+      x = self.activation(x)
     with tf.variable_scope('global_avg_pool'):
-      x = self._pool(x, 'GLO')
+      x = self.pool(x, 'GLO')
 
     with tf.variable_scope('logit'):
-      x = self._fc(x, self.shape_y[1], name='fc', bias=True)
+      x = self.fc(x, self.shape_y[1], name='fc', bias=True)
 
     return x
 

@@ -4,18 +4,18 @@ from nets.net import Net
 
 class MobileNet(Net):
 
-  def _activation(self, x):
+  def activation(self, x):
     return tf.nn.relu6(x)
 
-  def _separable_conv(self, x, ksize, c_out, stride=1, padding='SAME', name='separable_conv'):
+  def separable_conv(self, x, ksize, c_out, stride=1, padding='SAME', name='separable_conv'):
     with tf.variable_scope(name + '_D'):
-      x = self._depthwise_conv(x, ksize, channel_multiplier=1, stride=stride, padding=padding)
-      x = self._batch_norm(x)
-      x = self._activation(x)
+      x = self.depthwise_conv(x, ksize, channel_multiplier=1, stride=stride, padding=padding)
+      x = self.batch_norm(x)
+      x = self.activation(x)
     with tf.variable_scope(name + '_M'):
-      x = self._conv(x, 1, c_out)
-      x = self._batch_norm(x)
-      x = self._activation(x)
+      x = self.conv(x, 1, c_out)
+      x = self.batch_norm(x)
+      x = self.activation(x)
     return x
 
   def model(self, x):
@@ -25,20 +25,20 @@ class MobileNet(Net):
     Multiplier = [2, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1]
 
     with tf.variable_scope('init'):
-      x = self._conv(x, 3, 32, stride=2)
-      x = self._batch_norm(x)
-      x = self._activation(x)
+      x = self.conv(x, 3, 32, stride=2)
+      x = self.batch_norm(x)
+      x = self.activation(x)
 
     for i in range(len(Stride)):
-      cout = self._shape(x)[1] * Multiplier[i]
-      x = self._separable_conv(x, 3, cout, Stride[i], name='S%d' % i)
+      cout = self.get_shape(x)[1] * Multiplier[i]
+      x = self.separable_conv(x, 3, cout, Stride[i], name='S%d' % i)
 
     with tf.variable_scope('global_avg_pool'):
-      x = self._pool(x, 'GLO')
+      x = self.pool(x, 'GLO')
 
     with tf.variable_scope('logit'):
-      x = self._dropout(x, 1e-3)
-      x = self._fc(x, self.shape_y[1], name='fc', bias=True)
+      x = self.dropout(x, 1e-3)
+      x = self.fc(x, self.shape_y[1], name='fc', bias=True)
 
     return x
 

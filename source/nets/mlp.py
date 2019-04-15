@@ -6,13 +6,13 @@ class MLP(Net):
 
   def model(self, x):
 
-    x = self._reshape(x)
+    x = self.reshape(x)
 
     with tf.variable_scope('fc0'):
-      x = self._fc(x, 256, name='fc0')
-      x = self._activation(x)
+      x = self.fc(x, 256, name='fc0')
+      x = self.activation(x)
     with tf.variable_scope('last'):
-      x = self._fc(x, self.shape_y[1], name='fc_last')
+      x = self.fc(x, self.shape_y[1], name='fc_last')
 
     return x
 
