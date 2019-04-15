@@ -69,7 +69,6 @@ class Net(object):
     )
 
     self.out = self.model(self.H[-1])
-
     self._loss(self.out, self.y)
 
   def model(self, x):
@@ -93,12 +92,17 @@ class Net(object):
       else:
         self.error = tf.reduce_mean(tf.cast(tf.not_equal(tf.argmax(out, axis=1), label), dtype=tf.float32))
 
-  def _arr(self, stride_or_ksize):
-    # data format NCHW
-    return [1, 1, stride_or_ksize, stride_or_ksize]
+  def _arr(self, stride_or_ksize, data_format=DATA_FORMAT):
+    if data_format is 'NCHW':
+      return [1, 1, stride_or_ksize, stride_or_ksize]
+    else:
+      return [1, stride_or_ksize, stride_or_ksize, 1]
 
   def _shape(self, x):
     return x.get_shape().as_list()
+
+  def _mul_all(self, mul_list):
+    return reduce(lambda x, y: x * y, mul_list)
 
   def _activation(self, x):
     return tf.nn.relu(x)
@@ -110,64 +114,69 @@ class Net(object):
 
   def _reshape(self, x, shape=None):
     if shape is None:
-      shape = [reduce(lambda x, y: x * y, self._shape(x)[1:])]
+      shape = [self._mul_all(self._shape(x)[1:])]
     shape = [-1] + shape
     x = tf.reshape(x, shape)
     self.H.append(x)
     return x
 
   def _get_variable(self, shape, name, initializer=None):
-    with tf.name_scope(name) as scope:
+    with tf.name_scope(name):
       if initializer is None:
         initializer = self.initializer
       self.W.append(tf.get_variable(name=name, shape=shape, initializer=initializer))
     return self.W[-1]
 
-  def _conv(self, x, ksize, c_out, stride=1, padding='SAME', bias=False, name='conv'):
-    c_in = self._shape(x)[1]
+  def _conv(self, x, ksize, c_out, stride=1, padding='SAME', bias=False, data_format=DATA_FORMAT, name='conv'):
+    shape_in = self._shape(x)
+    c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
     W = self._get_variable([ksize, ksize, c_in, c_out], name)
-    x = tf.nn.conv2d(x, W, self._arr(stride), padding=padding, data_format='NCHW', name=name)
+    x = tf.nn.conv2d(x, W, self._arr(stride, data_format=data_format), padding=padding, data_format=data_format, name=name)
     if bias:
       b = self._get_variable([c_out], name + '_b', initializer=tf.initializers.zeros)
-      x = tf.nn.bias_add(x, b, data_format='NCHW')
+      x = tf.nn.bias_add(x, b, data_format=data_format)
     self.H.append(x)
 
     shape_out = self._shape(x)
-    MACs = c_in*shape_out[-1]*shape_out[-2]*shape_out[-3]*ksize*ksize
+    MEMs = self._mul_all(shape_out[1:])
+    MACs = c_in*ksize*ksize*MEMs
     self.MACs.append([name, MACs])
-
-    MEMs = shape_out[-1]*shape_out[-2]*shape_out[-3]
     self.MEMs.append([name, MEMs])
 
     return x
 
-  def _depthwise_conv(self, x, ksize, channel_multiplier=1, stride=1, padding='SAME', name='depthwise_conv'):
-    c_in = self._shape(x)[1]
+  def _depthwise_conv(self, x, ksize, channel_multiplier=1, stride=1, padding='SAME', data_format=DATA_FORMAT, name='depthwise_conv'):
+    shape_in = self._shape(x)
+    c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
 
-    initializer = variance_scaling_initializer(
-      factor=2.0, mode='FAN_OUT', uniform=False,  # MSRA
-    )
+    initializer = variance_scaling_initializer(factor=2.0, mode='FAN_OUT', uniform=False)  # MSRA
 
     W = self._get_variable([ksize, ksize, c_in, channel_multiplier], name, initializer)
-    x = tf.nn.depthwise_conv2d(x, W, self._arr(stride), padding=padding, data_format='NCHW', name=name)
+    x = tf.nn.depthwise_conv2d(x, W, self._arr(stride, data_format=data_format), padding=padding, data_format=data_format, name=name)
     self.H.append(x)
 
     shape_out = self._shape(x)
-    MACs = shape_out[-1]*shape_out[-2]*shape_out[-3]*ksize*ksize
+    MEMs = self._mul_all(shape_out[1:])
+    MACs = ksize*ksize*MEMs
     self.MACs.append([name,MACs])
-
-    MEMs = shape_out[-1]*shape_out[-2]*shape_out[-3]
     self.MEMs.append([name, MEMs])
 
     return x
 
-  def _channel_shuffle(self, x, num_group):
-    n, c, h, w = self._shape(x)
-    assert c%num_group == 0
+  def _channel_shuffle(self, x, num_group, data_format=DATA_FORMAT):
+    if data_format is 'NCHW':
+      n, c, h, w = self._shape(x)
+      assert c % num_group == 0
+      x_reshaped = tf.reshape(x, [-1, num_group, c // num_group, h, w])
+      x_transposed = tf.transpose(x_reshaped, [0, 2, 1, 3, 4])
+      out = tf.reshape(x_transposed, [-1, c, h, w])
+    else:
+      n, h, w, c = self._shape(x)
+      assert c % num_group == 0
+      x_reshaped = tf.reshape(x, [-1, h, w, num_group, c // num_group])
+      x_transposed = tf.transpose(x_reshaped, [0, 1, 2, 4, 3])
+      out = tf.reshape(x_transposed, [-1, h, w, c])
 
-    x_reshaped = tf.reshape(x, [-1, num_group, c//num_group, h, w])
-    x_transposed = tf.transpose(x_reshaped, [0, 2, 1, 3, 4])
-    out = tf.reshape(x_transposed, [-1, c, h, w])
     return out
 
   def _mixup(self, x, y, alpha):
@@ -176,59 +185,40 @@ class Net(object):
       random = tf.random_uniform([tf.shape(x)[0], 1, 1, 1], minval=0, maxval=alpha, dtype=tf.float32)
       x_slide = tf.concat([x[1:, ...], x[0:1, ...]], axis=0)
       y_slide = tf.concat([y[1:, ...], y[0:1, ...]], axis=0)
-      x_mixed = random * x + (1 - random) * x_slide
+      x = random * x + (1 - random) * x_slide
       random_squeeze = random[:, 0:, 0, 0]
-      y_mixed = random_squeeze * y + (1 - random_squeeze) * y_slide
-    return x_mixed, y_mixed
+      y = random_squeeze * y + (1 - random_squeeze) * y_slide
+    return x, y
 
-
-
-
-
-
-
-  def _group_conv(self, x, ksize, c_out, num_group=None, stride=1, padding='SAME', shuffle=False, name='group_conv'):
-    c_in = self._shape(x)[1]
+  def _group_conv(self, x, ksize, c_out, num_group=None, stride=1, padding='SAME', shuffle=False, data_format=DATA_FORMAT, name='group_conv'):
+    shape_in = self._shape(x)
+    c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
     assert c_in % num_group == 0 and c_out % num_group == 0
     c_out_group = c_out//num_group
 
     initializer0 = self.initializer
 
-    self.initializer = variance_scaling_initializer(
-      factor=2.0 / num_group, mode='FAN_IN', uniform=False,  # MSRA
-    )
+    self.initializer = variance_scaling_initializer(factor=2.0 / num_group, mode='FAN_IN', uniform=False)
 
-    X = tf.split(x, num_group, axis=1)
+    axis = 1 if data_format is 'NCHW' else -1
+    X = tf.split(x, num_group, axis=axis)
     Y = []
     for i in range(num_group):
       Y.append(self._conv(X[i], ksize, c_out_group, stride, padding, name=name + '-%d'%i))
-    x = tf.concat(Y, axis=1)
+    x = tf.concat(Y, axis=axis)
 
     if shuffle:
-      x = self._channel_shuffle(x, num_group=num_group)
+      x = self._channel_shuffle(x, num_group=num_group, data_format=data_format)
 
     self.H.append(x)
-
     self.initializer = initializer0
 
     shape_out = self._shape(x)
-    MACs = shape_out[-1]*shape_out[-2]*shape_out[-3]*ksize*ksize/num_group
-    self.MACs.append([name,MACs])
-
-    MEMs = shape_out[-1]*shape_out[-2]*shape_out[-3]
+    MEMs = self._mul_all(shape_out[1:])
+    MACs = c_in*ksize*ksize*MEMs // num_group
+    self.MACs.append([name, MACs])
     self.MEMs.append([name, MEMs])
 
-    return x
-
-  def _shuffle_conv(self, x, ksize, c_out, num_group, stride=1, padding='SAME', name='shuffle_conv'):
-    with tf.variable_scope(name + '_D'):
-      x = self._depthwise_conv(x, ksize, channel_multiplier=1, stride=stride, padding=padding)
-      x = self._batch_norm(x)
-      x = self._activation(x)
-    with tf.variable_scope(name + '_G'):
-      x = self._group_conv(x, 1, c_out, num_group=num_group)
-      x = self._batch_norm(x)
-      x = self._activation(x)
     return x
 
   def _separable_conv(self, x, ksize, c_out, stride=1, padding='SAME', name='separable_conv'):
