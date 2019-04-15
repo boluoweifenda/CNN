@@ -57,7 +57,12 @@ The training log files will be printed and saved in `log/time_your_options_title
 You can check the training details in log files, and derive statistics for drawing curves.
 
 And the model will be saved in `model/time_your_options_title` if you have configured the saving parameters.
-a
+
+
+
+
+
+
 
 ## Exercise for Tsinghua lecture: Neuromorphic Computing Theory and System
 <a id='exercise'></a>
@@ -80,6 +85,6 @@ a
 - 尝试使用MLP训练fashion，对比和CNN的差别
 
 ### Experiment 3:
--参考[ResNet论文](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)，
--补全`/options/resnet_cifar.py`中的设置
--复现其ResNet-56的实验结果
+- 参考[ResNet论文](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)
+- 补全`/options/resnet_cifar.py`中的设置
+- 复现其ResNet-56的实验结果
