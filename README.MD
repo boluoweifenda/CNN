@@ -62,11 +62,23 @@ a
 ## Exercise for Tsinghua lecture: Neuromorphic Computing Theory and System
 <a id='exercise'></a>
 
-following 
+完成下列实验，提交实验报告，内容包括：
+- 实验整个流程关键信息的记录，分析，总结
+- 运行、结果等截图，收敛曲线等等
+- 个人感想
 
 ### Experiment 1:
+使用MLP训练mnist， 记录：
+- 收敛曲线（train正确率，test正确率，train loss）
+- 尝试添加几层全连接，对比效果
+- 尝试更改loss function 和 optimizer， 对比效果
 
 ### Experiment 2:
+使用LeNet训练fashion， report
+- 收敛曲线（train正确率，test正确率，train loss）
+- 尝试添加几层卷积，以及修改preprocess，对比效果
+- 尝试使用MLP训练fashion，对比和CNN的差别
 
-### Experiment 3 (optional):
+### Experiment 3:
+参考[ResNet论文](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)，补全`/options/resnet_cifar.py`中的设置，复现其实验结果
 
