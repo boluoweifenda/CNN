@@ -17,7 +17,7 @@ network = 'lenet'  #'mlp', 'lenet', 'alexnet', 'resnet', 'densenet', 'mobilenet_
 path_load = None
 path_save = None   # None, False, True, or specify a dir
 
-l2_decay = {'decay': 1e-4, 'exclude': ['depthwise']}
+l2_decay = {'decay': 1e-4, 'exclude': []}
 epoch_step = tf.Variable(1, name='epoch_step', trainable=False)
 learning_step = tf.Variable(0, name='learning_step', trainable=False)
 lr_decay = tf.train.cosine_decay(0.1, epoch_step, decay_steps=100)
