@@ -1,6 +1,10 @@
-# A simplified project based on TensorFlow-Slim image classification model library
+# 
 
-Code example for convolutional neural network training
+A simple and extensible project for convolutional neural network training
+ 
+It is based on [TensorFlow-Slim image classification model library](https://github.com/tensorflow/models/tree/master/research/slim)
+
+
 
 ## Prerequisites
 - A computer with NVIDIA GPUs
