@@ -1,8 +1,8 @@
 # 
 
-A simple and extensible project for convolutional neural network training
- 
-It is based on [TensorFlow-Slim image classification model library](https://github.com/tensorflow/models/tree/master/research/slim)
+A simple and extensible project based on 
+[TensorFlow-Slim image classification model library](https://github.com/tensorflow/models/tree/master/research/slim)
+for fast demonstrations of convolutional neural network training
 
 
 
@@ -19,25 +19,23 @@ Download and generate mnist, fashion and cifar datasets by:
 ```bash
 python3 data/xxx/download_and_convert_xxx.py
 ```
-For imagenet, please follow the instructions in 
+For imagenet dataset, please follow the instructions in 
+[an automated script](https://github.com/tensorflow/models/tree/master/research/slim#an-automated-script-for-processing-imagenet-data),
+and change the destinations in `/source/datasets/dataset_factory` to the converted tf.record file locations
 
 
-and change the file destination in  to the converted tfrecord file 
-## Config training devices
+## Configuring training hyperparameters
+
+Change or new an option file in `/options`, there are some templates for beginners.
+
+
+### Training devices
 Change your configurations in the file
-```bash
-gedit source/opt.py
-gpu_list = [0]
-```
-to use GPU0
-or
-```bash
-gpu_list = []
-```
-to use cpu
+
+Single GPU trainig with GPU-2 `gpu_list = [2]`
 
 
-## Config training hyperparameters
+
 Change your configurations in the file
 ```bash
 gedit source/opt.py

@@ -24,7 +24,6 @@ dir_map = {
   'cifar100': '../../../datasets/cifar100/',
   'imagenet': '/imagenet/TFRecord/',  # we move imagenet dataset to SSD for better reading speed
   'imagenet256': '/imagenet/TFRecord256/',  # we move imagenet dataset to SSD for better reading speed
-
 }
 
 
