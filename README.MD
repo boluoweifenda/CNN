@@ -5,7 +5,7 @@ A simple and extensible project based on
 for 
 - fast demonstrations of various ideas
 - an optimal toolbox and framework for CNN beginners
-- exercises for Tsinghua lecture: Neuromorphic Computing Theory and System
+- <a href="#exercise">exercises for Tsinghua lecture: Neuromorphic Computing Theory and System</a><br>
 
 
 ## Prerequisites
@@ -60,4 +60,13 @@ And the model will be saved in `model/time_your_options_title` if you have confi
 a
 
 ## Exercise for Tsinghua lecture: Neuromorphic Computing Theory and System
+<a id='exercise'></a>
+
+following 
+
+### Experiment 1:
+
+### Experiment 2:
+
+### Experiment 3 (optional):
 
