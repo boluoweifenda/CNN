@@ -54,7 +54,8 @@ class Net(object):
     self.shape_x = self.get_shape(x)
     self.shape_y = self.get_shape(y)
 
-    x, y = self.mixup(x, y, alpha=opts.mixup)
+    if hasattr(opts, 'mixup'):
+      x, y = self.mixup(x, y, alpha=opts.mixup)
 
     self.H = [x]
     self.collect = []

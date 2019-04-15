@@ -8,7 +8,6 @@ delay = False  # start training after xxx minutes
 gpu_list = [0,1,2,3]
 batch_size = 256
 data_format = 'NCHW'
-mixup = 0
 
 dataset = 'imagenet'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'
 preprocess = 'inception_v2'  # 'mnist', 'cifar', 'alexnet', 'inception_v2'
