@@ -1,4 +1,4 @@
-# 
+# TensorFlow-Slimmer image classification model library
 
 A simple and extensible project based on 
 [TensorFlow-Slim image classification model library](https://github.com/tensorflow/models/tree/master/research/slim)
