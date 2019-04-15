@@ -2,8 +2,10 @@
 
 A simple and extensible project based on 
 [TensorFlow-Slim image classification model library](https://github.com/tensorflow/models/tree/master/research/slim)
-for fast demonstrations of convolutional neural network training
-
+for 
+- fast demonstrations of various ideas
+- an optimal toolbox and framework for CNN beginners
+- exercises for Tsinghua lecture: Neuromorphic Computing Theory and System
 
 
 ## Prerequisites
@@ -26,45 +28,35 @@ and change the destinations in `/source/datasets/dataset_factory` to the convert
 
 ## Configuring training hyperparameters
 
-Change or new an option file in `/options`, there are some templates for beginners.
+Change or new an option file in `source/options/`, there are some templates for beginners.
 
 
 ### Training devices
 Change your configurations in the file
 
-Single GPU trainig with GPU-2 `gpu_list = [2]`
+- Single GPU trainig with GPU-2: `gpu_list = [2]`
+- Multi-GPU training with GPU-1 and GPU-3: `gpu_list = [1,3]`
+- CPU-only training (deprecated): `gpu_list = []` 
 
 
+### Network models
 
-Change your configurations in the file
-```bash
-gedit source/opt.py
-```
+Change or new a model file in `source/nets/`, and register it in `nets_factory.py`
 
-## Config network models
-Change your configurations in the file
-```bash
-gedit source/nets/mlp.py
-```
-or
-```bash
-gedit source/nets/lenet5.py
-```
-or add your own network files, don't forget to register them in nets_factory.py
+You can also modify and add other components, such as preprocessing, dataset. 
+Don't forget to register them in individual factory files.
 
-You can also adjust and add other components, such as preprocessing, dataset, and register them in individual factory files.
-
-## Train
-Start training:
+## Start training:
+In case the option file name in `/source/options/` is `your_training_options.py` 
 ```bash
 cd source/
-python top.py
+python3 top.py -o your_training_options
 ```
-The training log files will be saved in log/xxxx.txt
+The training log files will be printed and saved in `log/time_your_options_title.txt`
 
 You can check the training details in log files, and derive statistics for drawing curves.
 
-And the model will be saved in model/xxxx if you have configured in opt.py
+And the model will be saved in `model/time_your_options_title` if you have configured the saving parameters.
 a
 
 ## Exercise for Tsinghua lecture: Neuromorphic Computing Theory and System
