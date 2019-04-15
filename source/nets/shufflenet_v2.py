@@ -7,15 +7,6 @@ class ShuffleNet(Net):
   def activation(self, x):
     return tf.nn.relu6(x)
 
-  def shuffle_channel(self, x, num_group):
-    n, c, h, w = self.get_shape(x)
-    assert c%num_group == 0
-
-    x_reshaped = tf.reshape(x, [-1, num_group, c//num_group, h, w])
-    x_transposed = tf.transpose(x_reshaped, [0, 2, 1, 3, 4])
-    x = tf.reshape(x_transposed, [-1, c, h, w])
-    return x
-
   def _branch0(self, x, c_out, stride=1):
 
     if stride ==1:

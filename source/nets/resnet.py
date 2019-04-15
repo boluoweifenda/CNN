@@ -46,7 +46,7 @@ class ResNet(Net):
     if self.get_shape(x)[-1] == 32:
       print('ResNet for cifar dataset')
 
-      num_residual = 18  # totoal layer: 6n+2 / 9n+2
+      num_residual = 9  # totoal layer: 6n+2 / 9n+2
       strides = [1, 2, 2]
       filters = [16, 32, 64]
       bottleneck = False

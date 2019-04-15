@@ -17,10 +17,14 @@ DATA_FORMAT = 'NCHW'
 class Net(object):
   def __init__(self, x, y, opts, is_training=True):
 
-    print('Perform input channel normalization in GPU for speed')
-
     dataset = opts.dataset
     preprocess = opts.preprocess
+    gpu_list = opts.gpu_list
+
+    self.learning_step = opts.learning_step
+    self.batch_size = opts.batch_size
+    self.l2_decay = opts.l2_decay
+    self.loss_func = opts.loss_func
 
     if x.dtype is not tf.float32:
       warnings.warn('input datatype for network is not float32, please check the preprocessing')
@@ -37,11 +41,15 @@ class Net(object):
       else:
         raise NotImplementedError('No normalization for dataset %s and preprocess %s' % (dataset,preprocess))
     else:
-      print('No normalization in GPU for dataset %s' % dataset)
+      print('No normalization in worker for dataset %s' % dataset)
+
 
     if DATA_FORMAT is 'NCHW':
       print('Input data format is NHWC, convert to NCHW')
       x = tf.transpose(x,[0,3,1,2])
+      if not gpu_list:
+        warnings.warn('Using NCHW data format for CPU training, '
+                      'please change DATA_FORMAT to NHWC if any op is not supported')
 
     self.is_training = is_training
     self.shape_x = self.get_shape(x)
@@ -52,12 +60,6 @@ class Net(object):
     self.H = [x]
     self.collect = []
     self.y = y
-    self.learning_step = opts.learning_step
-    self.batch_size = opts.batch_size
-    self.gpu_list = opts.gpu_list
-    self.l2_decay = opts.l2_decay
-    self.loss_func = opts.loss_func
-
     self.W = []
     self.MACs = []
     self.MEMs = []
@@ -219,7 +221,8 @@ class Net(object):
     return x
 
   def separable_conv(self, x, ksize, c_out, stride=1, padding='SAME', data_format=DATA_FORMAT, name='separable_conv'):
-    c_in = self.get_shape(x)[1]
+    shape_in = self.get_shape(x)
+    c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
 
     initializer = variance_scaling_initializer(
       factor=2.0, mode='FAN_OUT', uniform=False,  # MSRA
@@ -228,29 +231,14 @@ class Net(object):
     depthwise_filter = self.get_variable([ksize, ksize, c_in, 1], name + '_d', initializer)
     pointwise_filter = self.get_variable([1, 1, c_in, c_out], name + '_p', self.initializer)
     x = tf.nn.separable_conv2d(x, depthwise_filter=depthwise_filter, pointwise_filter=pointwise_filter,
-                               strides=self.window(stride), padding=padding, name=name, data_format='NCHW')
+                               strides=self.window(stride), padding=padding, name=name, data_format=data_format)
 
     shape_out = self.get_shape(x)
-    MACs = shape_out[-1]*shape_out[-2]*c_in*c_out + shape_out[-1]*shape_out[-2]*c_in*ksize*ksize
+    MEMs = self.mul_all(shape_out[1:]) * 2
+    MACs = c_in * (MEMs//(2*c_out)) * (ksize*ksize + c_out)
     self.MACs.append([name,MACs])
-
-    MEMs = shape_out[-1]*shape_out[-2]*shape_out[-3]*2
     self.MEMs.append([name, MEMs])
 
-    return x
-
-  def deconv(self, x, ksize, c_out, stride=1, padding='SAME', bias=False, name='conv_t'):
-    shape = self.get_shape(x)
-    from tensorflow.python.layers import utils
-    out_H = utils.deconv_output_length(shape[2], ksize, padding.lower(), stride)
-    out_W = utils.deconv_output_length(shape[3], ksize, padding.lower(), stride)
-    output_shape = [shape[0], c_out, out_H, out_W]
-    W = self.get_variable([ksize, ksize, c_out, shape[1]], name)
-    x = tf.nn.conv2d_transpose(x, W, output_shape, self.window(stride), padding=padding, data_format='NCHW', name=name)
-    if bias:
-      b = self.get_variable([c_out], name + '_b', initializer=tf.initializers.zeros)
-      x = tf.nn.bias_add(x, b, data_format='NCHW')
-    self.H.append(x)
     return x
 
   def fc(self, x, c_out, bias=False, name='fc'):
@@ -263,14 +251,13 @@ class Net(object):
     self.H.append(x)
 
     MACs = c_in*c_out
-    self.MACs.append([name,MACs])
-
     MEMs = c_out
+    self.MACs.append([name,MACs])
     self.MEMs.append([name, MEMs])
 
     return x
 
-  def scale(self, x, name='scale', data_format='NCHW'):
+  def scale(self, x, data_format=DATA_FORMAT, name='scale'):
     shape = self.get_shape(x)
     if len(shape) == 4:
       if data_format == 'NCHW':
@@ -283,7 +270,7 @@ class Net(object):
     x = scale * x
     return x
 
-  def bias(self, x, name='bias', data_format='NCHW'):
+  def bias(self, x, data_format=DATA_FORMAT, name='bias'):
     shape = self.get_shape(x)
     if len(shape) == 4:
       if data_format == 'NCHW':
@@ -296,32 +283,33 @@ class Net(object):
     x = tf.nn.bias_add(x, bias, data_format=data_format)
     return x
 
-  def linear(self, x, name='linear', data_format='NCHW'):
+  def linear(self, x, data_format=DATA_FORMAT, name='linear'):
     x = self.scale(x, name=name + '_s', data_format=data_format)
     x = self.bias(x, name=name + '_b', data_format=data_format)
     return x
 
-  def pool(self, x, type, ksize=2, stride=1, padding='SAME', data_format='NCHW'):
+  def pool(self, x, type, ksize=2, stride=1, padding='SAME', data_format=DATA_FORMAT):
     assert x.get_shape().ndims == 4, 'Invalid pooling shape:' + x.get_shape()
     if type == 'MAX':
       x = tf.nn.max_pool(x, self.window(ksize), self.window(stride), padding=padding, data_format=data_format)
     elif type == 'AVG':
       x = tf.nn.avg_pool(x, self.window(ksize), self.window(stride), padding=padding, data_format=data_format)
     elif type == 'GLO':
-      x = tf.reduce_mean(x, [2, 3]) if data_format == 'NCHW' else tf.reduce_mean(x, [1, 2])
+      axis = [2, 3] if data_format == 'NCHW' else [1, 2]
+      x = tf.reduce_mean(x, axis=axis)
     else:
       raise ValueError('Invalid pooling type:' + type)
     self.H.append(x)
     return x
 
-  def batch_norm(self, x, center=True, scale=True, decay=0.9, epsilon=1e-5, data_format='NCHW'):
+  def batch_norm(self, x, center=True, scale=True, decay=0.9, epsilon=1e-5, data_format=DATA_FORMAT):
     x = batch_norm(x, center=center, scale=scale, is_training=self.is_training, decay=decay, epsilon=epsilon,
                    fused=True, data_format=data_format)
     self.H.append(x)
 
     shape_out = self.get_shape(x)
 
-    MEMs = shape_out[-1]*shape_out[-2]*shape_out[-3]
+    MEMs = self.mul_all(shape_out[1:])
     self.MEMs.append(['batchnorm', MEMs])
 
     return x
