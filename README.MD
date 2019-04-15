@@ -68,17 +68,17 @@ a
 - 个人感想
 
 ### Experiment 1:
-使用MLP训练mnist， 记录：
+使用MLP训练mnist，`/options/mlp_mnist.py` 记录：
 - 收敛曲线（train正确率，test正确率，train loss）
 - 尝试添加几层全连接，对比效果
 - 尝试更改loss function 和 optimizer， 对比效果
 
 ### Experiment 2:
-使用LeNet训练fashion， report
+使用LeNet训练fashion，`/options/lenet_fashion.py` 记录:
 - 收敛曲线（train正确率，test正确率，train loss）
 - 尝试添加几层卷积，以及修改preprocess，对比效果
 - 尝试使用MLP训练fashion，对比和CNN的差别
 
 ### Experiment 3:
-参考[ResNet论文](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)，补全`/options/resnet_cifar.py`中的设置，复现其实验结果
+参考[ResNet论文](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)，补全`/options/resnet_cifar.py`中的设置，复现其ResNet-56的实验结果
 
