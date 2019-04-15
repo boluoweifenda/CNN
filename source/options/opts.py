@@ -6,7 +6,8 @@ seed = None
 repeat = 1
 delay = False  # start training after xxx minutes
 gpu_list = [0]
-batch_size = 128
+batch_size = 64
+data_format = 'NCHW'
 mixup = 0
 
 dataset = 'cifar10'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'

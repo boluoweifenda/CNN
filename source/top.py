@@ -2,9 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from nets.nets_factory import get_net_fn
+from utils.log import Log
 from datasets.dataset_factory import get_dataset
-from input_pipeline import get_batch
+from nets.nets_factory import get_net_fn
+from utils.input_pipeline import get_batch
 
 import numpy as np
 import time
@@ -63,7 +64,6 @@ def set_seed(seed=None):
 
 
 def set_log(path):
-  from log import Log
   Log(path, 'w+', 1)  # set log file
 
 

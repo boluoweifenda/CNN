@@ -11,16 +11,17 @@ from tensorflow.contrib.layers import variance_scaling_initializer
 from preprocess.preprocess_ops import channel_normalize
 import warnings
 
-DATA_FORMAT = 'NCHW'
-
 
 class Net(object):
   def __init__(self, x, y, opts, is_training=True):
+
+    self.is_training = is_training
 
     dataset = opts.dataset
     preprocess = opts.preprocess
     gpu_list = opts.gpu_list
 
+    self.data_format = opts.data_format
     self.learning_step = opts.learning_step
     self.batch_size = opts.batch_size
     self.l2_decay = opts.l2_decay
@@ -43,15 +44,13 @@ class Net(object):
     else:
       print('No normalization in worker for dataset %s' % dataset)
 
-
-    if DATA_FORMAT is 'NCHW':
+    if self.data_format is 'NCHW':
       print('Input data format is NHWC, convert to NCHW')
       x = tf.transpose(x,[0,3,1,2])
       if not gpu_list:
         warnings.warn('Using NCHW data format for CPU training, '
                       'please change DATA_FORMAT to NHWC if any op is not supported')
 
-    self.is_training = is_training
     self.shape_x = self.get_shape(x)
     self.shape_y = self.get_shape(y)
 
@@ -92,11 +91,9 @@ class Net(object):
       else:
         self.error = tf.reduce_mean(tf.cast(tf.not_equal(tf.argmax(out, axis=1), label), dtype=tf.float32))
 
-  def window(self, stride_or_ksize, data_format=DATA_FORMAT):
-    if data_format is 'NCHW':
-      return [1, 1, stride_or_ksize, stride_or_ksize]
-    else:
-      return [1, stride_or_ksize, stride_or_ksize, 1]
+  def window(self, stride_or_ksize):
+    return [1, 1, stride_or_ksize, stride_or_ksize] if self.data_format is 'NCHW' \
+      else [1, stride_or_ksize, stride_or_ksize, 1]
 
   def get_shape(self, x):
     return x.get_shape().as_list()
@@ -127,11 +124,12 @@ class Net(object):
       self.W.append(tf.get_variable(name=name, shape=shape, initializer=initializer))
     return self.W[-1]
 
-  def conv(self, x, ksize, c_out, stride=1, padding='SAME', bias=False, data_format=DATA_FORMAT, name='conv'):
+  def conv(self, x, ksize, c_out, stride=1, padding='SAME', bias=False, name='conv'):
+    data_format = self.data_format
     shape_in = self.get_shape(x)
     c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
     W = self.get_variable([ksize, ksize, c_in, c_out], name)
-    x = tf.nn.conv2d(x, W, self.window(stride, data_format=data_format), padding=padding, data_format=data_format, name=name)
+    x = tf.nn.conv2d(x, W, self.window(stride), padding=padding, data_format=data_format, name=name)
     if bias:
       b = self.get_variable([c_out], name + '_b', initializer=tf.initializers.zeros)
       x = tf.nn.bias_add(x, b, data_format=data_format)
@@ -145,7 +143,8 @@ class Net(object):
 
     return x
 
-  def depthwise_conv(self, x, ksize, channel_multiplier=1, stride=1, padding='SAME', data_format=DATA_FORMAT, name='depthwise_conv'):
+  def depthwise_conv(self, x, ksize, channel_multiplier=1, stride=1, padding='SAME', name='depthwise_conv'):
+    data_format = self.data_format
     shape_in = self.get_shape(x)
     c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
 
@@ -163,7 +162,8 @@ class Net(object):
 
     return x
 
-  def shuffle_channel(self, x, num_group, data_format=DATA_FORMAT):
+  def shuffle_channel(self, x, num_group):
+    data_format = self.data_format
     if data_format is 'NCHW':
       n, c, h, w = self.get_shape(x)
       assert c % num_group == 0
@@ -190,7 +190,7 @@ class Net(object):
       y = random_squeeze * y + (1 - random_squeeze) * y_slide
     return x, y
 
-  def group_conv(self, x, ksize, c_out, num_group=None, stride=1, padding='SAME', shuffle=False, data_format=DATA_FORMAT, name='group_conv'):
+  def group_conv(self, x, ksize, c_out, num_group=None, stride=1, padding='SAME', shuffle=False, name='group_conv'):
     shape_in = self.get_shape(x)
     c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
     assert c_in % num_group == 0 and c_out % num_group == 0
@@ -207,7 +207,7 @@ class Net(object):
     x = tf.concat(Y, axis=axis)
 
     if shuffle:
-      x = self.shuffle_channel(x, num_group=num_group, data_format=data_format)
+      x = self.shuffle_channel(x, num_group=num_group, data_format=self.data_format)
 
     self.H.append(x)
     self.initializer = initializer0
@@ -220,7 +220,7 @@ class Net(object):
 
     return x
 
-  def separable_conv(self, x, ksize, c_out, stride=1, padding='SAME', data_format=DATA_FORMAT, name='separable_conv'):
+  def separable_conv(self, x, ksize, c_out, stride=1, padding='SAME', name='separable_conv'):
     shape_in = self.get_shape(x)
     c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
 
@@ -231,7 +231,7 @@ class Net(object):
     depthwise_filter = self.get_variable([ksize, ksize, c_in, 1], name + '_d', initializer)
     pointwise_filter = self.get_variable([1, 1, c_in, c_out], name + '_p', self.initializer)
     x = tf.nn.separable_conv2d(x, depthwise_filter=depthwise_filter, pointwise_filter=pointwise_filter,
-                               strides=self.window(stride), padding=padding, name=name, data_format=data_format)
+                               strides=self.window(stride), padding=padding, name=name, data_format=self.data_format)
 
     shape_out = self.get_shape(x)
     MEMs = self.mul_all(shape_out[1:]) * 2
@@ -257,10 +257,10 @@ class Net(object):
 
     return x
 
-  def scale(self, x, data_format=DATA_FORMAT, name='scale'):
+  def scale(self, x, name='scale'):
     shape = self.get_shape(x)
     if len(shape) == 4:
-      if data_format == 'NCHW':
+      if self.data_format == 'NCHW':
         shape = [1, shape[1], 1, 1]
       else:
         shape = [1, 1, 1, shape[3]]
@@ -270,7 +270,7 @@ class Net(object):
     x = scale * x
     return x
 
-  def bias(self, x, data_format=DATA_FORMAT, name='bias'):
+  def bias(self, x, name='bias'):
     shape = self.get_shape(x)
     if len(shape) == 4:
       if data_format == 'NCHW':
@@ -280,15 +280,17 @@ class Net(object):
     else:
       c_out = shape[-1]
     bias = self.get_variable([c_out], name, initializer=tf.initializers.zeros)
-    x = tf.nn.bias_add(x, bias, data_format=data_format)
+    x = tf.nn.bias_add(x, bias, data_format=self.data_format)
     return x
 
-  def linear(self, x, data_format=DATA_FORMAT, name='linear'):
+  def linear(self, x, name='linear'):
+    data_format = self.data_format
     x = self.scale(x, name=name + '_s', data_format=data_format)
     x = self.bias(x, name=name + '_b', data_format=data_format)
     return x
 
-  def pool(self, x, type, ksize=2, stride=1, padding='SAME', data_format=DATA_FORMAT):
+  def pool(self, x, type, ksize=2, stride=1, padding='SAME'):
+    data_format = self.data_format
     assert x.get_shape().ndims == 4, 'Invalid pooling shape:' + x.get_shape()
     if type == 'MAX':
       x = tf.nn.max_pool(x, self.window(ksize), self.window(stride), padding=padding, data_format=data_format)
@@ -302,9 +304,9 @@ class Net(object):
     self.H.append(x)
     return x
 
-  def batch_norm(self, x, center=True, scale=True, decay=0.9, epsilon=1e-5, data_format=DATA_FORMAT):
+  def batch_norm(self, x, center=True, scale=True, decay=0.9, epsilon=1e-5):
     x = batch_norm(x, center=center, scale=scale, is_training=self.is_training, decay=decay, epsilon=epsilon,
-                   fused=True, data_format=data_format)
+                   fused=True, data_format=self.data_format)
     self.H.append(x)
 
     shape_out = self.get_shape(x)
