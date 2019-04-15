@@ -80,4 +80,6 @@ a
 - 尝试使用MLP训练fashion，对比和CNN的差别
 
 ### Experiment 3:
-参考[ResNet论文](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)，补全`/options/resnet_cifar.py`中的设置，复现其ResNet-56的实验结果
+-参考[ResNet论文](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)，
+-补全`/options/resnet_cifar.py`中的设置
+-复现其ResNet-56的实验结果
