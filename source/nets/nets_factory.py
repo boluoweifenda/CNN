@@ -10,7 +10,6 @@ from nets import mobilenet_v2
 from nets import resnet
 from nets import densenet
 from nets import mlp
-from nets import shiftnet
 from nets import shufflenet_v2
 
 
@@ -23,7 +22,6 @@ nets_map = {
   'resnet': resnet.ResNet,
   'densenet': densenet.DenseNet,
   'mlp': mlp.MLP,
-  'shiftnet': shiftnet.ShiftNet,
   'shufflenet_v2': shufflenet_v2.ShuffleNet,
 }
 
