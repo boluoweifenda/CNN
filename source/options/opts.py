@@ -5,7 +5,7 @@ mode = 'train'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 
 seed = None
 repeat = 1
 delay = False  # start training after xxx minutes
-gpu_list = [0,1,2,3]
+gpu_list = [0, 1, 2, 3]
 batch_size = 256
 data_format = 'NCHW'
 

@@ -350,7 +350,7 @@ def main():
       tower_errors.append(nets[i].error)
 
       if i == 0:
-        print('We only get batchnorm moving average updates from data in the first worker for speed')
+        # We only get batchnorm moving average updates from data in the first worker for speed
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         nets[-1].count_parameters()
         nets[-1].count_MACs()
