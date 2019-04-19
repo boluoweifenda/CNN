@@ -15,7 +15,6 @@ import warnings
 class Net(object):
   def __init__(self, x, y, opts, is_training=True):
 
-    self.is_training = is_training
 
     dataset = opts.dataset
     preprocess = opts.preprocess
@@ -26,6 +25,10 @@ class Net(object):
     self.batch_size = opts.batch_size
     self.l2_decay = opts.l2_decay
     self.loss_func = opts.loss_func
+
+    self.H = [x]
+    self.Y = [y]
+    self.is_training = is_training
 
     if x.dtype is not tf.float32:
       warnings.warn('input datatype for network is not float32, please check the preprocessing')
@@ -44,32 +47,28 @@ class Net(object):
     else:
       print('No normalization in worker for dataset %s' % dataset)
 
-    if self.data_format is 'NCHW':
+    if self.data_format is 'NCHW' and self.get_shape(x)[-1] in [1, 3]:
       print('Input data format is NHWC, convert to NCHW')
       x = tf.transpose(x,[0,3,1,2])
       if not gpu_list:
         warnings.warn('Using NCHW data format for CPU training, '
                       'please change DATA_FORMAT to NHWC if any op is not supported')
 
-    self.shape_x = self.get_shape(x)
-    self.shape_y = self.get_shape(y)
-
     if hasattr(opts, 'mixup'):
       x, y = self.mixup(x, y, alpha=opts.mixup)
 
-    self.H = [x]
-    self.collect = []
-    self.y = y
+    self.H.append(x)
+    self.Y.append(y)
+    self.shape_x = self.get_shape(x)
+    self.shape_y = self.get_shape(y)
+
     self.W = []
     self.MACs = []
     self.MEMs = []
-    self.initializer = variance_scaling_initializer(
-      # factor=1.0, mode='FAN_IN', uniform = True,  # Caffe
-      factor=2.0, mode='FAN_IN', uniform=False,  # MSRA
-    )
+    self.initializer = variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False)
 
     self.out = self.model(self.H[-1])
-    self.get_loss(self.out, self.y)
+    self.get_loss(self.out, self.Y[-1])
 
   def model(self, x):
     raise NotImplementedError('Basic class, none network model is defined!')
@@ -384,5 +383,4 @@ class Net(object):
     else:
       print('No L2 weight decay')
       return 0.0
-
 
