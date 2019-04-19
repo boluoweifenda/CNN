@@ -238,7 +238,13 @@ def main():
   if path_load is not None:
     # key word search
     list = glob.glob('../model/*' + path_load + '*.tf.data*')
-    assert len(list) == 1, 'Find none or more than one model file'
+    if len(list) == 0:
+      raise FileNotFoundError('Could not find any model file match the key words' + path_load)
+    elif len(list) > 1:
+      for list_file in list:
+        print(list_file)
+      raise FileNotFoundError('Find more than one model file match the key words' + path_load)
+
     path_load = list[0][:list[0].find('.tf.') + 3]
     print('Find model in', path_load)
 
