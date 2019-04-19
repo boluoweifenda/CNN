@@ -375,12 +375,20 @@ def main():
 
       if i == num_worker - 1:
         print('Testing model on GPU %d' % gpu_list[i]) if gpu_list else print('Testing model on CPUs')
-        if num_worker == 1:
-          tf.get_variable_scope().reuse_variables()
-
+        tf.get_variable_scope().reuse_variables()
         batch_test = iterator_test.get_next()
         nets.append(net(batch_test[0], batch_test[1], opts=opts, is_training=False))
         error_batch_test = nets[-1].error
+
+        if mode in ['attack']:
+          print('Attack model on GPU %d' % gpu_list[i - 1]) if gpu_list else print('Attack model on CPUs')
+          tf.get_variable_scope().reuse_variables()
+          batch_attack_x = tf.placeholder(shape=batch_test[0].get_shape(), dtype=batch_test[0].dtype)
+          batch_attack_y = tf.placeholder(shape=batch_test[1].get_shape(), dtype=batch_test[1].dtype)
+          nets.append(net(batch_attack_x, batch_attack_y, opts=opts, is_training=False))
+          error_batch_attack = nets[-1].error
+
+
 
   with tf.device('/cpu:0' if is_cpu_ps else worker):
     grad_batch_train = aggregate_gradients(tower_grads)
@@ -401,8 +409,37 @@ def main():
   def evaluate():
     error_test = 0.
     for _ in tqdm(range(num_batch_test), desc='Test', leave=False, smoothing=0.1):
-      error_test += sess.run([error_batch_test])[0]
+      error_test += sess.run(error_batch_test)
     return error_test / num_batch_test
+
+
+  def attack(black=False):
+    error_fgsm = 0.
+
+    if black is False:
+      adversial_x = []
+      adversial_y = []
+      for _ in tqdm(range(num_batch_test), desc='Attack', leave=False, smoothing=0.1):
+        test_x, test_y, grads = sess.run([nets[1].H[0], nets[1].Y[0], nets[1].grads_H[0]])
+        fsgm_x = test_x + 2*np.sign(grads)/64
+        error_fgsm += sess.run(error_batch_attack, feed_dict={batch_attack_x: fsgm_x, batch_attack_y: test_y})
+        adversial_x.append(fsgm_x)
+        adversial_y.append(test_y)
+    else:
+      adversial_sample = np.load('adversial_sample.npz')
+      adversial_x = adversial_sample['x']
+      adversial_y = adversial_sample['y']
+      for i in tqdm(range(adversial_x.shape[0]), desc='Attack', leave=False, smoothing=0.1):
+        error_fgsm += sess.run(error_batch_attack,
+                               feed_dict={batch_attack_x: adversial_x[i, ...], batch_attack_y: adversial_y[i, ...]})
+
+    adversial_x = np.array(adversial_x)
+    adversial_y = np.array(adversial_y)
+    np.savez('adversial_sample.npz', x=adversial_x, y=adversial_y)
+
+    return error_fgsm / num_batch_test
+
+
 
   def load_model(path):
     print('Loading model from', path)
@@ -418,8 +455,10 @@ def main():
     print('Test: %.4f' % error_test_best)
 
   if mode == 'test':
-    error_test_best = evaluate()
-    print('Test: %.4f' % error_test_best)
+    exit(0)
+
+  if mode == 'attack':
+    print(attack())
     exit(0)
 
   if mode == 'export':
@@ -429,7 +468,7 @@ def main():
     exit(0)
 
   if mode == 'restart':
-    sess.run(epoch_step.assign(90))
+    sess.run(epoch_step.assign(0))
 
   print_line()
 
