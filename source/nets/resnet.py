@@ -43,7 +43,7 @@ class ResNet(Net):
 
   def model(self, x):
 
-    if self.get_shape(x)[-1] == 32:
+    if self.get_shape(x)[-1] <= 128:
       print('ResNet for cifar dataset')
 
       num_residual = 9  # totoal layer: 6n+2 / 9n+2

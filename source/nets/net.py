@@ -15,7 +15,6 @@ import warnings
 class Net(object):
   def __init__(self, x, y, opts, is_training=True):
 
-
     dataset = opts.dataset
     preprocess = opts.preprocess
     gpu_list = opts.gpu_list
@@ -47,7 +46,7 @@ class Net(object):
     else:
       print('No normalization in worker for dataset %s' % dataset)
 
-    if self.data_format is 'NCHW' and self.get_shape(x)[-1] in [1, 3]:
+    if self.data_format is 'NCHW':
       print('Input data format is NHWC, convert to NCHW')
       x = tf.transpose(x,[0,3,1,2])
       if not gpu_list:
@@ -62,12 +61,12 @@ class Net(object):
     self.shape_x = self.get_shape(x)
     self.shape_y = self.get_shape(y)
 
-    self.W = []
     self.MACs = []
     self.MEMs = []
     self.initializer = variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False)
 
     self.out = self.model(self.H[-1])
+    self.W = tf.trainable_variables()
     self.get_loss(self.out, self.Y[-1])
 
   def model(self, x):
@@ -121,8 +120,7 @@ class Net(object):
     with tf.name_scope(name):
       if initializer is None:
         initializer = self.initializer
-      self.W.append(tf.get_variable(name=name, shape=shape, initializer=initializer))
-    return self.W[-1]
+      return tf.get_variable(name=name, shape=shape, initializer=initializer)
 
   def conv(self, x, ksize, c_out, stride=1, padding='SAME', bias=False, name='conv'):
     data_format = self.data_format
@@ -181,7 +179,7 @@ class Net(object):
 
   def mixup(self, x, y, alpha):
     if 0 < alpha <= 1 and self.is_training:
-      print('use mixup input data augmentation, alpha=' % alpha)
+      print('use mixup input data augmentation, alpha=%.2f' % alpha)
       random = tf.random_uniform([tf.shape(x)[0], 1, 1, 1], minval=0, maxval=alpha, dtype=tf.float32)
       x_slide = tf.concat([x[1:, ...], x[0:1, ...]], axis=0)
       y_slide = tf.concat([y[1:, ...], y[0:1, ...]], axis=0)

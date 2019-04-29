@@ -111,18 +111,6 @@ def export(list_of_numpy, name='W'):
   print('exported')
 
 
-def load_model(sess, name=None):
-  base_dir = '../model/'
-  if name is not None:
-    list = glob.glob(base_dir + '*' + name + '*.tf.*')
-    assert len(list) == 3, 'Find none or more than one model file'
-    path_load = list[0][:list[0].find('.tf.') + 3]
-    print('Loading model from %s ...' % path_load)
-
-    saver = tf.train.Saver(max_to_keep=None)
-    saver.restore(sess, path_load)
-
-
 def aggregate_gradients(tower_grads):
   mean_grads = []
   for grad_and_vars in zip(*tower_grads):
@@ -231,13 +219,15 @@ def main():
 
   ####################################################################################################
 
+  model_dir = '../model/'
+
   if isinstance(path_save, bool):
     # if title is 'temp', we will not save model
-    path_save = '../model/' + time_tag_short + '(' + title + ').tf' if path_save and title != 'temp' else None
+    path_save = model_dir + time_tag_short + '(' + title + ').tf' if path_save and title != 'temp' else None
 
   if path_load is not None:
     # key word search
-    list = glob.glob('../model/*' + path_load + '*.tf.data*')
+    list = glob.glob(model_dir + '*' + path_load + '*.tf.data*')
     if len(list) == 0:
       raise FileNotFoundError('Could not find any model file match the key words' + path_load)
     elif len(list) > 1:
@@ -412,7 +402,6 @@ def main():
       error_test += sess.run(error_batch_test)
     return error_test / num_batch_test
 
-
   def attack(black=False):
     error_fgsm = 0.
 
@@ -439,15 +428,13 @@ def main():
 
     return error_fgsm / num_batch_test
 
-
-
-  def load_model(path):
-    print('Loading model from', path)
-    saver.restore(sess, path)
-
   def save_model(path):
     saver.save(sess, path)
     print('S', end='')
+
+  def load_model(path):
+    print('Loading model from %s ...' % path_load)
+    saver.restore(sess, path_load)
 
   if path_load is not None:
     load_model(path_load)
@@ -458,7 +445,7 @@ def main():
     exit(0)
 
   if mode == 'attack':
-    print(attack())
+    print(attack(black=False))
     exit(0)
 
   if mode == 'export':
@@ -492,7 +479,7 @@ def main():
         print('DEBUG: '),
         _, loss_delta, error_delta, H, W, gradsH, gradsW, label_ = sess.run(
           [train_op, loss_batch_train, error_batch_train, nets[0].H, nets[0].W, nets[0].grads_H, nets[0].grads_W,
-           nets[0].y])
+           nets[0].Y])
       else:
         _, loss_delta, error_delta = sess.run([train_op, loss_batch_train, error_batch_train])
 
