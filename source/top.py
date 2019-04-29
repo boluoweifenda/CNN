@@ -441,17 +441,15 @@ def main():
     error_test_best = evaluate()
     print('Test: %.4f' % error_test_best)
 
-  if mode == 'test':
-    exit(0)
-
   if mode == 'attack':
     print(attack(black=False))
-    exit(0)
 
   if mode == 'export':
     vars_list = get_variable('batchnorm/gamma:')
     vars_numpy = sess.run(vars_list)
     export(vars_numpy, 'gamma')
+
+  if mode in ['test', 'export', 'attack']:
     exit(0)
 
   if mode == 'restart':
@@ -466,7 +464,6 @@ def main():
     lr_epoch = sess.run(lr_decay)
     if lr_epoch <= 0:
       break
-      # sess.run(epoch_step.assign(1))
     epoch = sess.run(epoch_step)
     print('Epoch: %03d' % epoch, end=' ')
 
