@@ -404,13 +404,14 @@ def main():
 
   def attack(black=False):
     error_fgsm = 0.
+    delta = 1./32
 
     if black is False:
       adversial_x = []
       adversial_y = []
       for _ in tqdm(range(num_batch_test), desc='Attack', leave=False, smoothing=0.1):
         test_x, test_y, grads = sess.run([nets[1].H[0], nets[1].Y[0], nets[1].grads_H[0]])
-        fsgm_x = test_x + 2*np.sign(grads)/64
+        fsgm_x = test_x + delta*np.sign(grads)
         error_fgsm += sess.run(error_batch_attack, feed_dict={batch_attack_x: fsgm_x, batch_attack_y: test_y})
         adversial_x.append(fsgm_x)
         adversial_y.append(test_y)
