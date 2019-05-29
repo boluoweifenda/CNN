@@ -19,7 +19,8 @@ for
 ## Preparing datasets
 Download and generate mnist, fashion and cifar datasets by:
 ```bash
-python3 data/xxx/download_and_convert_xxx.py
+cd data/xxx/
+python3 download_and_convert_xxx.py
 ```
 For imagenet dataset, please follow the instructions in 
 [an automated script](https://github.com/tensorflow/models/tree/master/research/slim#an-automated-script-for-processing-imagenet-data),
