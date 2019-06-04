@@ -15,10 +15,10 @@ import warnings
 class Net(object):
   def __init__(self, x, y, opts, is_training=True):
 
-    dataset = opts.dataset
     preprocess = opts.preprocess
     gpu_list = opts.gpu_list
 
+    self.dataset = opts.dataset
     self.data_format = opts.data_format
     self.learning_step = opts.learning_step
     self.batch_size = opts.batch_size
@@ -33,7 +33,7 @@ class Net(object):
       warnings.warn('input datatype for network is not float32, please check the preprocessing')
       x = tf.cast(x, dtype=tf.float32)
 
-    if dataset in ['imagenet', 'imagenet256']:
+    if self.dataset in ['imagenet', 'imagenet256']:
       mean = [0.485, 0.456, 0.406]
       std = [0.229, 0.224, 0.225]
       if preprocess == 'alexnet':
