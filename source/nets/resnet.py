@@ -33,6 +33,8 @@ class ResNet(Net):
         x = self.activation(x)
         x = self.conv(x, 3, c_out)
 
+    # x = self.squeeze_and_excitation(x, r=16)
+
     with tf.variable_scope('SA'):
       if stride is not 1 or c_in != c_out:
         # # Option B

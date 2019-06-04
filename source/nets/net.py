@@ -255,6 +255,20 @@ class Net(object):
 
     return x
 
+  def squeeze_and_excitation(self, x, r=16, name='se'):
+    x_orig = x
+    x = self.pool(x, type='GLO')
+    c_in = self.get_shape(x)[-1]
+    with tf.variable_scope(name):
+      x = self.fc(x, c_out=int(c_in / r), name='fc1')
+      x = tf.nn.relu(x)
+      x = self.fc(x, c_out=c_in, name='fc2')
+      x = tf.nn.sigmoid(x)
+    if self.data_format == 'NCHW':
+      return x[:, :, None, None] * x_orig
+    else:
+      return x[:, None, None, :] * x_orig
+
   def scale(self, x, name='scale'):
     shape = self.get_shape(x)
     if len(shape) == 4:
