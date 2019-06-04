@@ -42,9 +42,9 @@ class Net(object):
         print('In the %s argumentation, image are already scaled to [0,1]' % preprocess)
         x = channel_normalize(x, mean, std)
       else:
-        raise NotImplementedError('No normalization for dataset %s and preprocess %s' % (dataset,preprocess))
+        raise NotImplementedError('No normalization for dataset %s and preprocess %s' % (self.dataset,preprocess))
     else:
-      print('No normalization in worker for dataset %s' % dataset)
+      print('No normalization in worker for dataset %s' % self.dataset)
 
     if self.data_format is 'NCHW':
       print('Input data format is NHWC, convert to NCHW')
