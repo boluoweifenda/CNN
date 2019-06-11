@@ -57,14 +57,12 @@ class ResNet(Net):
         filters = [4 * i for i in filters]
 
       with tf.variable_scope('init'):
-        x = self.conv(x, 3, 16)
+        x = self.conv(x, 3, filters[0])
 
       for i in range(len(strides)):
-        with tf.variable_scope('U%d-0' % i):
-          x = self._residual(x, filters[i], strides[i], bottleneck)
-        for j in range(1, num_residual):
+        for j in range(num_residual):
           with tf.variable_scope('U%d-%d' % (i, j)):
-            x = self._residual(x, filters[i], 1, bottleneck)
+            x = self._residual(x, filters[i], stride=strides[i] if j == 0 else 1, bottleneck=bottleneck)
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)
@@ -89,6 +87,7 @@ class ResNet(Net):
       # num_residual = [3, 4, 23, 3]
       # num_residual = [3, 8, 36, 3]
       strides = [1, 2, 2, 2]
+      # filters = [128, 256, 512, 1024]  # 0.5x
       filters = [256, 512, 1024, 2048]
       bottleneck = True
 

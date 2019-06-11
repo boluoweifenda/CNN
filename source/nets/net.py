@@ -336,7 +336,7 @@ class Net(object):
         dict_parameters[key] = 0
       dict_parameters[key] += num
 
-    key_list = ['batchnorm', 'instancenorm', 'conv', 'fc']
+    key_list = ['batchnorm', 'instancenorm', 'conv', 'fc', 'unknown']
 
     for var in tf.trainable_variables():
       print(var.device, var.op.name, var.shape.as_list())
@@ -351,6 +351,7 @@ class Net(object):
           break
       if not has_key:
         warnings.warn('Unknown parameter named ' + name_lowcase)
+        dict_add(key, num)
 
     total = 0
     for _,value in dict_parameters.items():
