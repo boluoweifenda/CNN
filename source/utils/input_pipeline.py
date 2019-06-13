@@ -47,7 +47,8 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, see
 
     def map_func(record):
 
-      num_channel = 3 if name == 'imagenet' else 0
+      # Some images in imagenet are grayscaled.
+      num_channel = 3 if name in ['imagenet', 'tiny_imagenet'] else 0
 
       if preprocess_name != 'inception_v2':
         parsed = tf.parse_single_example(record, feature)

@@ -102,6 +102,10 @@ class Net(object):
 
   def activation(self, x):
     return tf.nn.relu(x)
+    # with tf.variable_scope(tf.get_variable_scope()):
+    #   relu_a = self.get_variable([1], 'relu_a', initializer=tf.initializers.ones)
+    #   relu_b = self.get_variable([1], 'relu_b', initializer=tf.initializers.zeros)
+    # return relu_a*tf.nn.relu(x+relu_b)
 
   def dropout(self, x, drop_prob, noise_shape=None, seed=None, name=None):
     if drop_prob > 0.00001 and self.is_training:
@@ -149,7 +153,7 @@ class Net(object):
     initializer = variance_scaling_initializer(factor=2.0, mode='FAN_OUT', uniform=False)  # MSRA
 
     W = self.get_variable([ksize, ksize, c_in, channel_multiplier], name, initializer)
-    x = tf.nn.depthwise_conv2d(x, W, self.window(stride, data_format=data_format), padding=padding, data_format=data_format, name=name)
+    x = tf.nn.depthwise_conv2d(x, W, self.window(stride), padding=padding, data_format=data_format, name=name)
     self.H.append(x)
 
     shape_out = self.get_shape(x)

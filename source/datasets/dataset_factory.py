@@ -6,6 +6,7 @@ from datasets import mnist
 from datasets import fashion
 from datasets import cifar10
 from datasets import cifar100
+from datasets import tiny_imagenet
 from datasets import imagenet
 
 
@@ -14,6 +15,7 @@ datasets_map = {
   'fashion': fashion,
   'cifar10': cifar10,
   'cifar100': cifar100,
+  'tiny_imagenet': tiny_imagenet,
   'imagenet': imagenet,
 }
 
@@ -22,8 +24,8 @@ dir_map = {
   'fashion': '../data/fashion/',
   'cifar10': '../data/cifar10/',
   'cifar100': '../data/cifar100/',
+  'tiny_imagenet': '../data/tiny_imagenet/',
   'imagenet': '/imagenet/TFRecord/',  # we move imagenet dataset to SSD for better reading speed
-  'imagenet256': '/imagenet/TFRecord256/',  # we move imagenet dataset to SSD for better reading speed
 }
 
 
