@@ -45,13 +45,14 @@ class ResNet(Net):
 
   def model(self, x):
 
-    if self.dataset in ['cifar10', 'cifar100', 'tiny_imagenet']:
-      print('ResNet for cifar dataset')
+    print('ResNet for %s dataset' % self.dataset)
+
+    if self.dataset in ['cifar10', 'cifar100']:
 
       num_residual = 9  # totoal layer: 6n+2 / 9n+2
+      bottleneck = False
       strides = [1, 2, 2]
       filters = [16, 32, 64]
-      bottleneck = False
 
       if bottleneck:
         filters = [4 * i for i in filters]
@@ -59,7 +60,7 @@ class ResNet(Net):
       with tf.variable_scope('init'):
         x = self.conv(x, 3, filters[0])
 
-      for i in range(len(strides)):
+      for i in range(len(filters)):
         for j in range(num_residual):
           with tf.variable_scope('U%d-%d' % (i, j)):
             x = self._residual(x, filters[i], stride=strides[i] if j == 0 else 1, bottleneck=bottleneck)
@@ -74,22 +75,26 @@ class ResNet(Net):
 
       return x
 
-    else:
-      print('ResNet for ImageNet dataset')
+    elif self.dataset in ['imagenet', 'tiny_imagenet']:
+
+      num_residual = [3, 4, 6, 3]  # 50
+      # num_residual = [3, 4, 23, 3]  # 101
+      # num_residual = [3, 8, 36, 3]  # 164
+      strides = [1, 2, 2, 2]
+      filters = [128, 256, 512, 1024]  # 0.5x
+      # filters = [256, 512, 1024, 2048]  # 1.0x
+      bottleneck = True
 
       with tf.variable_scope('init'):
-        x = self.conv(x, 7, 64, stride=2)
-        x = self.batch_norm(x)
-        x = self.activation(x)
-        x = self.pool(x, type='MAX', ksize=3, stride=2)
-
-      num_residual = [3, 4, 6, 3]
-      # num_residual = [3, 4, 23, 3]
-      # num_residual = [3, 8, 36, 3]
-      strides = [1, 2, 2, 2]
-      # filters = [128, 256, 512, 1024]  # 0.5x
-      filters = [256, 512, 1024, 2048]
-      bottleneck = True
+        if self.dataset == 'imagenet':
+          x = self.conv(x, 7, 64, stride=2)
+          x = self.batch_norm(x)
+          x = self.activation(x)
+          x = self.pool(x, type='MAX', ksize=3, stride=2)
+        else:
+          x = self.conv(x, 3, 64)
+          x = self.batch_norm(x)
+          x = self.activation(x)
 
       for i in range(len(strides)):
         with tf.variable_scope('U%d-0' % i):
