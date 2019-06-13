@@ -34,9 +34,8 @@ def preprocess_image(image, dataset, is_training=False):
     mean = [129.30428, 124.07023, 112.43411]
     std = [68.17024, 65.391785, 70.4184]
   else:
-    # TODO: get tiny_imagenet mean and std
-    mean = [125.30694, 122.95031, 113.86539]
-    std = [62.993233, 62.08874, 66.70485]
+    mean = [122.46042058, 114.25709442, 101.36342874]
+    std = [70.49128864, 68.56013545, 71.80543095]
 
   if NORMALIZATION_FIRST:
     image = channel_normalize(image, mean, std)

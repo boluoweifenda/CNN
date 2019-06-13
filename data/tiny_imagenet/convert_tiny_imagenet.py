@@ -45,18 +45,16 @@ from absl import flags
 from absl import logging
 
 import pandas as pd
-
+import warnings
 import tensorflow as tf
+import numpy as np
+import cv2
 
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('input_dir', 'tiny-imagenet-200', 'Input directory')
 # flags.DEFINE_string('output_dir', '', 'Output directory')
-
-flags.DEFINE_string('imagenet_synsets_path', '',
-                    'Optional path to /imagenet_lsvrc_2015_synsets.txt')
-
 
 ImageMetadata = namedtuple('ImageMetadata', ['label', 'x1', 'y1', 'x2', 'y2'])
 
@@ -143,6 +141,7 @@ def get_image_format(filename):
   if filename.endswith('jpeg') or filename.endswith('jpg'):
     return b'jpeg'
   elif filename.endswith('png'):
+    warnings.warn(filename)
     return b'png'
   else:
     raise ValueError('Unrecognized file format: %s' % filename)
@@ -151,65 +150,70 @@ def get_image_format(filename):
 class TinyImagenetWriter(object):
   """Helper class which writes Tiny Imagenet dataset into TFRecord file."""
 
-  def __init__(self, tiny_imagenet_wnid_conveter, imagenet_wnid_converter):
+  def __init__(self, tiny_imagenet_wnid_conveter):
     self.tiny_imagenet_wnid_conveter = tiny_imagenet_wnid_conveter
-    self.imagenet_wnid_converter = imagenet_wnid_converter
 
   def write_tf_record(self,
                       annotations,
                       output_file):
     """Generates TFRecord file from given list of annotations."""
+
+    image_all = []
+
     with tf.python_io.TFRecordWriter(output_file) as writer:
       for image_filename, image_metadata in annotations:
         with tf.gfile.Open(image_filename, 'rb') as f:
           image_buffer = f.read()
+
         image_format = get_image_format(image_filename)
+
+        image_decode_BGR = cv2.imdecode(np.fromstring(image_buffer, dtype=np.uint8), cv2.IMREAD_COLOR)
+        image_all.append(image_decode_BGR)
+
+        # cv2.imshow('img', cv2.resize(image_decode, (512, 512)))
+        # cv2.waitKey(-1)
+
         features = {
-            'image/encoded': tf.train.Feature(
-                bytes_list=tf.train.BytesList(value=[image_buffer])),
-            'image/format': tf.train.Feature(
-                bytes_list=tf.train.BytesList(value=[image_format]))
+          'image/encoded': tf.train.Feature(
+            bytes_list=tf.train.BytesList(value=[image_buffer])),
+          'image/format': tf.train.Feature(
+            bytes_list=tf.train.BytesList(value=[image_format])),
         }
+
+        # training and validation set
         if image_metadata:
+
+          tiny_imagenet_label = self.tiny_imagenet_wnid_conveter.to_node_id(
+            image_metadata.label)
+
+          features['image/class/label'] = tf.train.Feature(
+            int64_list=tf.train.Int64List(value=[tiny_imagenet_label]))
           # bounding box features
           features['bbox/xmin'] = tf.train.Feature(
-              int64_list=tf.train.Int64List(value=[image_metadata.x1]))
+            int64_list=tf.train.Int64List(value=[image_metadata.x1]))
           features['bbox/ymin'] = tf.train.Feature(
-              int64_list=tf.train.Int64List(value=[image_metadata.y1]))
+            int64_list=tf.train.Int64List(value=[image_metadata.y1]))
           features['bbox/xmax'] = tf.train.Feature(
-              int64_list=tf.train.Int64List(value=[image_metadata.x2]))
+            int64_list=tf.train.Int64List(value=[image_metadata.x2]))
           features['bbox/ymax'] = tf.train.Feature(
-              int64_list=tf.train.Int64List(value=[image_metadata.y2]))
-          # tiny imagenet label, from [0, 200) iterval
-          tiny_imagenet_label = self.tiny_imagenet_wnid_conveter.to_node_id(
-              image_metadata.label)
-          # features['label/wnid'] = tf.train.Feature(
-          #     bytes_list=tf.train.BytesList(value=bytes(image_metadata.label, encoding='utf-8')))
-          features['image/class/label'] = tf.train.Feature(
-              int64_list=tf.train.Int64List(value=[tiny_imagenet_label]))
-          # full imagenet label, from [1, 1001) interval
-          if self.imagenet_wnid_converter:
-            imagenet_label = self.imagenet_wnid_converter.to_node_id(
-                image_metadata.label)
-            features['label/imagenet'] = tf.train.Feature(
-                int64_list=tf.train.Int64List(value=[imagenet_label]))
+            int64_list=tf.train.Int64List(value=[image_metadata.y2]))
+
         example = tf.train.Example(features=tf.train.Features(feature=features))
         writer.write(example.SerializeToString())
 
+      image_all = np.array(image_all)
+      mean = np.mean(image_all, axis=(0,1,2))
+      std = np.std(image_all, axis=(0,1,2))
+      print(mean[::-1]),
+      print(std[::-1])
+
+
 
 def main(_):
-  # assert FLAGS.input_dir, 'Input directory must be provided'
-  # assert FLAGS.output_dir, 'Output directory must be provided'
-
   # Create WordNet ID conveters for tiny imagenet and possibly for imagenet
   tiny_imagenet_wnid_conveter = WnIdToNodeIdConverter(
       os.path.join(FLAGS.input_dir, 'wnids.txt'),
       background_class=False)
-  if FLAGS.imagenet_synsets_path:
-    imagenet_wnid_converter = WnIdToNodeIdConverter(FLAGS.imagenet_synsets_path,
-                                                    background_class=True)
-  else:
-    imagenet_wnid_converter = None
 
   # read tiny imagenet annotations
   train_annotations = read_training_annotations(
@@ -220,8 +224,7 @@ def main(_):
   test_filenames = read_test_annotations(os.path.join(FLAGS.input_dir, 'test'))
 
   # Generate TFRecord files
-  writer = TinyImagenetWriter(tiny_imagenet_wnid_conveter,
-                              imagenet_wnid_converter)
+  writer = TinyImagenetWriter(tiny_imagenet_wnid_conveter)
   tf.logging.info('Converting %d training images', len(train_annotations))
   writer.write_tf_record(train_annotations, 'tiny_imagenet_train.tfrecord')
   tf.logging.info('Converting %d validation images ', len(val_annotations))
