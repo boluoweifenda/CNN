@@ -37,7 +37,7 @@ class ResNet(Net):
     with tf.variable_scope('SA'):
       if stride is not 1:
         # suggested by "Bag of Tricks for Image Classification with Convolutional Neural Networks"
-        orig_x = self.pool(x, 'AVG', 2, 2, padding='VALID')
+        orig_x = self.pool(orig_x, 'AVG', ksize=2, stride=2)
       if c_in != c_out:
         orig_x = self.conv(orig_x, 1, c_out)
       x += orig_x
@@ -82,8 +82,8 @@ class ResNet(Net):
       # num_residual = [3, 4, 23, 3]  # 101
       # num_residual = [3, 8, 36, 3]  # 164
       strides = [1, 2, 2, 2]
-      filters = [128, 256, 512, 1024]  # 0.5x
-      # filters = [256, 512, 1024, 2048]  # 1.0x
+      # filters = [128, 256, 512, 1024]  # 0.5x
+      filters = [256, 512, 1024, 2048]  # 1.0x
       bottleneck = True
 
       with tf.variable_scope('init'):
@@ -93,12 +93,10 @@ class ResNet(Net):
         else:
           x = self.conv(x, 3, 64)
 
-      for i in range(len(strides)):
-        with tf.variable_scope('U%d-0' % i):
-          x = self._residual(x, filters[i], strides[i], bottleneck)
-        for j in range(1, num_residual[i]):
+      for i in range(len(num_residual)):
+        for j in range(num_residual[i]):
           with tf.variable_scope('U%d-%d' % (i, j)):
-            x = self._residual(x, filters[i], 1, bottleneck)
+            x = self._residual(x, filters[i], stride=strides[i] if j is 0 else 1, bottleneck=bottleneck)
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)
