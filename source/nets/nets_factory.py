@@ -12,7 +12,6 @@ from nets import densenet
 from nets import mlp
 from nets import shufflenet_v2
 
-
 nets_map = {
   'lenet': lenet.LeNet,
   'vgg7': vgg7.VGG7,
@@ -24,6 +23,7 @@ nets_map = {
   'mlp': mlp.MLP,
   'shufflenet_v2': shufflenet_v2.ShuffleNet,
 }
+
 
 def get_net_fn(name):
   if name not in nets_map:

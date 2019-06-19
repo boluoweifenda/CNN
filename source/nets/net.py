@@ -240,7 +240,7 @@ class Net(object):
     return x
 
   def fc(self, x, c_out, bias=False, name='fc'):
-    c_in = self.get_shape(x)[1]
+    c_in = self.get_shape(x)[-1]
     W = self.get_variable([c_in, c_out], name)
     x = tf.matmul(x, W)
     if bias:
