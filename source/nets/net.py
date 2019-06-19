@@ -102,10 +102,6 @@ class Net(object):
 
   def activation(self, x):
     return tf.nn.relu(x)
-    # with tf.variable_scope(tf.get_variable_scope()):
-    #   relu_a = self.get_variable([1], 'relu_a', initializer=tf.initializers.ones)
-    #   relu_b = self.get_variable([1], 'relu_b', initializer=tf.initializers.zeros)
-    # return relu_a*tf.nn.relu(x+relu_b)
 
   def dropout(self, x, drop_prob, noise_shape=None, seed=None, name=None):
     if drop_prob > 0.00001 and self.is_training:
