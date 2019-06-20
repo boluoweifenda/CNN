@@ -32,20 +32,18 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, see
     to increase this number if you have a large number of CPU cores.
     '''
     cycle_length = min(10, len(file_name))
-    dataset = dataset.apply(
-      data.parallel_interleave(tf.data.TFRecordDataset, cycle_length=cycle_length))
+    dataset = dataset.interleave(tf.data.TFRecordDataset, cycle_length=cycle_length)
 
     # We prefetch a batch at a time, This can help smooth out the time taken to
     # load input files as we go through shuffling and processing.
     dataset = dataset.prefetch(buffer_size=batch_size)
 
     if is_training:
-      dataset = dataset.apply(data.shuffle_and_repeat(buffer_size=10000, seed=seed))
+      dataset = dataset.apply(tf.data.experimental.shuffle_and_repeat(buffer_size=10000, seed=seed))
     else:
       dataset = dataset.repeat()
 
     def map_func(record):
-
       # Some images in imagenet are grayscaled.
       num_channel = 3 if name in ['imagenet', 'tiny_imagenet'] else 0
 
@@ -67,10 +65,10 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, see
     batch_size is almost always much greater than the number of CPU cores.    
     '''
     dataset = dataset.apply(
-      data.map_and_batch(
-        map_func=map_func,
+      tf.data.experimental.map_and_batch(
+        map_func,
         batch_size=batch_size,
-        num_parallel_batches=1))
+        num_parallel_calls=tf.data.experimental.AUTOTUNE))
 
     '''
     Operations between the final prefetch and the get_next call to the iterator

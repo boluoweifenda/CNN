@@ -40,8 +40,8 @@ def get_split(split_name, dataset_dir, file_pattern=None):
   decoder = tf.image.decode_jpeg
   label = dataset.read_label_file(dataset_dir + FILE_LABEL)
   feature = {
-    'image/encoded': tf.FixedLenFeature((), tf.string, default_value=''),
-    'image/class/label': tf.FixedLenFeature(
+    'image/encoded': tf.io.FixedLenFeature((), tf.string, default_value=''),
+    'image/class/label': tf.io.FixedLenFeature(
       [], tf.int64, default_value=tf.zeros([], dtype=tf.int64)),
 
   }
