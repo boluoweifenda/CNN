@@ -305,9 +305,9 @@ class Net(object):
     data_format = self.data_format
     assert x.get_shape().ndims == 4, 'Invalid pooling shape:' + x.get_shape()
     if type == 'MAX':
-      x = tf.nn.max_pool(x, self.window(ksize), self.window(stride), padding=padding, data_format=data_format)
+      x = tf.nn.max_pool2d(x, self.window(ksize), self.window(stride), padding=padding, data_format=data_format)
     elif type == 'AVG':
-      x = tf.nn.avg_pool(x, self.window(ksize), self.window(stride), padding=padding, data_format=data_format)
+      x = tf.nn.avg_pool2d(x, self.window(ksize), self.window(stride), padding=padding, data_format=data_format)
     elif type == 'GLO':
       axis = [2, 3] if data_format == 'NCHW' else [1, 2]
       x = tf.reduce_mean(x, axis=axis)

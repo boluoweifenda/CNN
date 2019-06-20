@@ -31,7 +31,6 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, see
     but high enough to provide the benefits of parallelization. You may want
     to increase this number if you have a large number of CPU cores.
     '''
-
     cycle_length = min(10, len(file_name))
     dataset = dataset.apply(
       data.parallel_interleave(tf.data.TFRecordDataset, cycle_length=cycle_length))

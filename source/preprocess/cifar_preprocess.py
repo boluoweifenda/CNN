@@ -40,15 +40,22 @@ def preprocess_image(image, dataset, is_training=False):
   if NORMALIZATION_FIRST:
     image = channel_normalize(image, mean, std)
 
-  if is_training:
-    pad_size = int(shape[0] * 1.25)
-    image = tf.image.resize_image_with_crop_or_pad(image, pad_size, pad_size)
-    image = tf.random_crop(image, shape)
-    image = tf.image.random_flip_left_right(image)
+  if name is 'tiny_imagenet':
+    if is_training:
+      image = tf.random_crop(image, [56,56,3])
+      image = tf.image.random_flip_left_right(image)
+    else:
+      image = tf.image.central_crop(image, 0.875)
+  else:
+    if is_training:
+      pad_size = int(shape[0] * 1.25)
+      image = tf.image.resize_image_with_crop_or_pad(image, pad_size, pad_size)
+      image = tf.image.random_crop(image, shape)
+      image = tf.image.random_flip_left_right(image)
 
-    if CUTOUT:
-      cutout_size = int(shape[0]/2)
-      image = cutout(image, cutout_size, cutout_size)
+      if CUTOUT:
+        cutout_size = int(shape[0]/2)
+        image = cutout(image, cutout_size, cutout_size)
 
   if not NORMALIZATION_FIRST:
     image = channel_normalize(image, mean, std)

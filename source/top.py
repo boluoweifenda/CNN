@@ -95,9 +95,6 @@ def create_config_proto():
 
 
 def get_session(gpu_list):
-
-  os.environ['CUDA_VISIBLE_DEVICES'] = ''.join(str(gpu) + ',' for gpu in gpu_list)
-  # os.environ['TF_ENABLE_WINOGRAD_NONFUSED'] = '1'
   sess = tf.InteractiveSession(config=create_config_proto())
   sess.run(tf.global_variables_initializer())
   return sess
@@ -240,6 +237,9 @@ def main():
 
   ####################################################################################################
 
+  os.environ['CUDA_VISIBLE_DEVICES'] = ''.join(str(gpu) + ',' for gpu in gpu_list)
+  # os.environ['TF_ENABLE_WINOGRAD_NONFUSED'] = '1'
+
   num_worker = max(len(gpu_list), 1)
   dataset_train = get_dataset(dataset, split='train')
   dataset_test = get_dataset(dataset, split='test')
@@ -262,10 +262,8 @@ def main():
       num_batch = num_batch_test
       batch_input = iterator_test.get_next()
 
-    sess = get_session(gpu_list)
-
     print('Testing the speed of data input pipeline.')
-
+    sess = get_session(gpu_list)
     while True:
       for batch in tqdm(range(num_batch), desc='Input pipeline', leave=False, smoothing=0.1):
         batch_input_ = sess.run(batch_input)
@@ -515,7 +513,6 @@ def main():
 
 
 if __name__ == '__main__':
-
   opts = importlib.import_module('options.' + OPTION)
   repeat = opts.repeat
   if repeat > 1:
