@@ -106,14 +106,14 @@ def resize_image(image, height, width):
     resized_image: A 3-D tensor containing the resized image. The first two
       dimensions have the shape [height, width].
   """
-  return tf.image.resize_images(
+  return tf.image.resize(
       image, [height, width], method=tf.image.ResizeMethod.BILINEAR,
       align_corners=False)
 
 
 def apply_with_random_selector(x, func, num_cases):
 
-  sel = tf.random_uniform([], maxval=num_cases, dtype=tf.int32)
+  sel = tf.random.uniform([], maxval=num_cases, dtype=tf.int32)
   # Pass the real x only to one of the func calls.
   return control_flow_ops.merge([
       func(control_flow_ops.switch(x, tf.equal(sel, case))[1], case)

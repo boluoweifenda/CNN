@@ -24,17 +24,13 @@ class DenseNet(Net):
     x = tf.concat([x_orth, x], axis=1)  # NCHW
     return x
 
-  def _transitionLayer(self, x, reduction, drop_prob, last):
+  def _transitionLayer(self, x, reduction, drop_prob):
     c_out = int(self.get_shape(x)[1] * reduction)
-
     x = self.batch_norm(x)
     x = self.activation(x)
-    if last:
-      x = self.pool(x, 'GLO')
-    else:
-      x = self.conv(x, 1, c_out)
-      x = self.dropout(x, drop_prob)
-      x = self.pool(x, 'AVG', 2, 2, padding='VALID')
+    x = self.conv(x, 1, c_out)
+    x = self.dropout(x, drop_prob)
+    x = self.pool(x, 'AVG', 2, 2, padding='VALID')
     return x
 
   def model(self, x):
@@ -57,8 +53,15 @@ class DenseNet(Net):
         for j in range(num_dense):
           with tf.variable_scope('B%d_L%d' % (i, j)):
             x = self._denseLayer(x, bottleneck, growthRate, drop_prob=drop_prob)
+        if i is num_block - 1: break
         with tf.variable_scope('T%d' % i):
-          x = self._transitionLayer(x, reduction=reduction, drop_prob=drop_prob, last=True if i == num_block - 1 else False)
+          x = self._transitionLayer(x, reduction=reduction, drop_prob=drop_prob)
+
+      with tf.variable_scope('global_avg_pool'):
+        x = self.batch_norm(x)
+        x = self.activation(x)
+        x = self.pool(x, 'GLO')
+
       with tf.variable_scope('logit'):
         x = self.fc(x, self.shape_y[1], bias=True, name='fc')
 
@@ -86,8 +89,14 @@ class DenseNet(Net):
         for j in range(stages[i]):
           with tf.variable_scope('B%d_L%d' % (i, j)):
             x = self._denseLayer(x, bottleneck, growthRate, drop_prob)
+        if i is len(stages) - 1: break
         with tf.variable_scope('T%d' % i):
-          x = self._transitionLayer(x, reduction=reduction, drop_prob=drop_prob, last=True if i == len(stages) - 1 else False)
+          x = self._transitionLayer(x, reduction=reduction, drop_prob=drop_prob)
+
+      with tf.variable_scope('global_avg_pool'):
+        x = self.batch_norm(x)
+        x = self.activation(x)
+        x = self.pool(x, 'GLO')
 
       with tf.variable_scope('logit'):
         x = self.fc(x, self.shape_y[1], name='fc')

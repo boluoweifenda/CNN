@@ -7,14 +7,12 @@ for
 - an optimal toolbox and framework for CNN beginners
 - <a href="#exercise">exercises for Tsinghua lecture: Neuromorphic Computing Theory and System</a><br>
 
-
 ## Prerequisites
 - A computer with NVIDIA GPUs
 - CUDA + CuDNN
-- TensorFlow (GPU version) tested: 1.14, 1.12, 1.9
+- TensorFlow (GPU version) tested: 1.14, 1.12
 - python3
 - tqdm
-
 
 ## Preparing datasets
 Download and generate mnist, fashion and cifar datasets by:
