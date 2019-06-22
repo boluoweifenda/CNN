@@ -3,7 +3,7 @@
 SEED = 1544678212
 ----------------------------------------------------------------------------------------------------
 Options are printed as follows:
-title = 'mobilenet-v2, 1.4x, lr 0.1'
+title = 'mobilenet-v2, 1.4x'
 mode = 'train'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 'input_test', 'speed_net'
 seed = None
 delay = False  # start training after xxx minutes

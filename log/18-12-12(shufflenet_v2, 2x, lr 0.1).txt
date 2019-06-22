@@ -3,7 +3,7 @@
 SEED = 1544544763
 ----------------------------------------------------------------------------------------------------
 Options are printed as follows:
-title = 'shufflenet_v2, 2x, lr 0.1'
+title = 'shufflenet_v2, 2x'
 mode = 'train'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 'input_test', 'speed_net'
 seed = None
 delay = False  # start training after xxx minutes
