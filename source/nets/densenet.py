@@ -67,7 +67,7 @@ class DenseNet(Net):
 
       return x
 
-    elif self.dataset in ['imagenet']:
+    elif self.dataset in ['imagenet', 'tiny_imagenet']:
 
       bottleneck = True
       growthRate = 32
@@ -79,8 +79,11 @@ class DenseNet(Net):
       # stages = [6, 12, 64, 48]  # densenet264
 
       with tf.variable_scope('init'):
-        x = self.conv(x, 7, 2 * growthRate, stride=2)
-        x = self.pool(x, 'MAX', 3, 2)
+        if self.dataset == 'imagenet':
+          x = self.conv(x, 7, 2 * growthRate, stride=2)
+          x = self.pool(x, 'MAX', 3, 2)
+        else:
+          x = self.conv(x, 3, 2 * growthRate)
 
       for i in range(len(stages)):
         for j in range(stages[i]):

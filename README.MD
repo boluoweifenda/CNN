@@ -4,7 +4,7 @@ A simple and extensible project based on
 [TensorFlow-Slim image classification model library](https://github.com/tensorflow/models/tree/master/research/slim)
 for 
 - fast demonstrations of various ideas
-- an optimal toolbox and framework for CNN beginners
+- reimplementation of CNN architecture engineering papers, e.g., MobileNetV2, ShuffleNetV2.
 - <a href="#exercise">exercises for Tsinghua lecture: Neuromorphic Computing Theory and System</a><br>
 
 ## Prerequisites

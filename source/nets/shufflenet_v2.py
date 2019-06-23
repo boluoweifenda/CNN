@@ -61,10 +61,10 @@ class ShuffleNet(Net):
   def model(self, x):
 
     Repeat = [4, 8, 4]
-    # Out = [48, 96, 192, 1024]
-    # Out = [116, 232, 464, 1024]
-    Out = [176, 352, 704, 1024]
-    # Out = [244, 488, 976, 2048]
+    # Out = [48, 96, 192, 1024]  # 0.5x
+    # Out = [116, 232, 464, 1024]  # 1.0x
+    # Out = [176, 352, 704, 1024]  # 1.5x
+    Out = [244, 488, 976, 2048]  # 2.0x
 
     with tf.variable_scope('init'):
       x = self.conv(x, 3, 24, stride=2)

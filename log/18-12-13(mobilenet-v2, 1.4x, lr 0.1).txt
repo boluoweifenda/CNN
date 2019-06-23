@@ -1,0 +1,307 @@
+----------------------------------------------------------------------------------------------------
+18-12-13 13:16:52
+SEED = 1544678212
+----------------------------------------------------------------------------------------------------
+Options are printed as follows:
+title = 'mobilenet-v2, 1.4x'
+mode = 'train'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 'input_test', 'speed_net'
+seed = None
+delay = False  # start training after xxx minutes
+gpu_list = [0, 1]
+batch_size = 256
+dataset = 'imagenet'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'
+preprocess = 'inception_v2'  # 'mnist', 'cifar', 'inception', 'alexnet', 'inception_v2'
+network = 'mobilenet_v2'  # 'mlp', 'lenet', 'alexnet', 'densenet_test', 'resnet_test', 'mobilenet_v1', 'mobilenet_v2', shufflenet_v2
+path_load = None
+path_save = True   # None, False, True, or specify a dir
+l2_decay = {'decay': 0.4e-4, 'exclude': ['depthwise', 'bias', 'batchnorm']}
+epoch_step = tf.Variable(1, name='epoch_step', trainable=False)
+learning_step = tf.Variable(0, name='learning_step', trainable=False)
+lr_decay = tf.train.cosine_decay(0.1, epoch_step, decay_steps=100)  # imagenet cosine
+loss_func = tf.losses.softmax_cross_entropy
+optimizer = tf.train.MomentumOptimizer(lr_decay, 0.9, use_nesterov=True)
+----------------------------------------------------------------------------------------------------
+Multi-GPU training tower with gpu list [0, 1]
+All parameters are pinned to CPU, all Ops are pinned to GPU
+Get batchnorm moving average updates from data in the first GPU for speed
+Get L2 decay grads in the second GPU for speed
+Training model on GPU 0
+Perform input channel normalization in GPU for speed
+In the inception_v2 argumentation, image are already scaled to [0,1]
+mean = [0.485 0.456 0.406] std = [0.229 0.224 0.225]
+Input data format is NHWC, convert to NCHW
+/device:CPU:0 init/conv_1 [3, 3, 3, 48]
+/device:CPU:0 init/BatchNorm/gamma [48]
+/device:CPU:0 init/BatchNorm/beta [48]
+/device:CPU:0 block0_depthwise/depthwise_conv_1 [3, 3, 48, 1]
+/device:CPU:0 block0_depthwise/BatchNorm/gamma [48]
+/device:CPU:0 block0_depthwise/BatchNorm/beta [48]
+/device:CPU:0 block0_projection/conv_1 [1, 1, 48, 24]
+/device:CPU:0 block0_projection/BatchNorm/gamma [24]
+/device:CPU:0 block0_projection/BatchNorm/beta [24]
+/device:CPU:0 block1_expansion/conv_1 [1, 1, 24, 144]
+/device:CPU:0 block1_expansion/BatchNorm/gamma [144]
+/device:CPU:0 block1_expansion/BatchNorm/beta [144]
+/device:CPU:0 block1_depthwise/depthwise_conv_1 [3, 3, 144, 1]
+/device:CPU:0 block1_depthwise/BatchNorm/gamma [144]
+/device:CPU:0 block1_depthwise/BatchNorm/beta [144]
+/device:CPU:0 block1_projection/conv_1 [1, 1, 144, 32]
+/device:CPU:0 block1_projection/BatchNorm/gamma [32]
+/device:CPU:0 block1_projection/BatchNorm/beta [32]
+/device:CPU:0 block2_expansion/conv_1 [1, 1, 32, 192]
+/device:CPU:0 block2_expansion/BatchNorm/gamma [192]
+/device:CPU:0 block2_expansion/BatchNorm/beta [192]
+/device:CPU:0 block2_depthwise/depthwise_conv_1 [3, 3, 192, 1]
+/device:CPU:0 block2_depthwise/BatchNorm/gamma [192]
+/device:CPU:0 block2_depthwise/BatchNorm/beta [192]
+/device:CPU:0 block2_projection/conv_1 [1, 1, 192, 32]
+/device:CPU:0 block2_projection/BatchNorm/gamma [32]
+/device:CPU:0 block2_projection/BatchNorm/beta [32]
+/device:CPU:0 block3_expansion/conv_1 [1, 1, 32, 192]
+/device:CPU:0 block3_expansion/BatchNorm/gamma [192]
+/device:CPU:0 block3_expansion/BatchNorm/beta [192]
+/device:CPU:0 block3_depthwise/depthwise_conv_1 [3, 3, 192, 1]
+/device:CPU:0 block3_depthwise/BatchNorm/gamma [192]
+/device:CPU:0 block3_depthwise/BatchNorm/beta [192]
+/device:CPU:0 block3_projection/conv_1 [1, 1, 192, 48]
+/device:CPU:0 block3_projection/BatchNorm/gamma [48]
+/device:CPU:0 block3_projection/BatchNorm/beta [48]
+/device:CPU:0 block4_expansion/conv_1 [1, 1, 48, 288]
+/device:CPU:0 block4_expansion/BatchNorm/gamma [288]
+/device:CPU:0 block4_expansion/BatchNorm/beta [288]
+/device:CPU:0 block4_depthwise/depthwise_conv_1 [3, 3, 288, 1]
+/device:CPU:0 block4_depthwise/BatchNorm/gamma [288]
+/device:CPU:0 block4_depthwise/BatchNorm/beta [288]
+/device:CPU:0 block4_projection/conv_1 [1, 1, 288, 48]
+/device:CPU:0 block4_projection/BatchNorm/gamma [48]
+/device:CPU:0 block4_projection/BatchNorm/beta [48]
+/device:CPU:0 block5_expansion/conv_1 [1, 1, 48, 288]
+/device:CPU:0 block5_expansion/BatchNorm/gamma [288]
+/device:CPU:0 block5_expansion/BatchNorm/beta [288]
+/device:CPU:0 block5_depthwise/depthwise_conv_1 [3, 3, 288, 1]
+/device:CPU:0 block5_depthwise/BatchNorm/gamma [288]
+/device:CPU:0 block5_depthwise/BatchNorm/beta [288]
+/device:CPU:0 block5_projection/conv_1 [1, 1, 288, 48]
+/device:CPU:0 block5_projection/BatchNorm/gamma [48]
+/device:CPU:0 block5_projection/BatchNorm/beta [48]
+/device:CPU:0 block6_expansion/conv_1 [1, 1, 48, 288]
+/device:CPU:0 block6_expansion/BatchNorm/gamma [288]
+/device:CPU:0 block6_expansion/BatchNorm/beta [288]
+/device:CPU:0 block6_depthwise/depthwise_conv_1 [3, 3, 288, 1]
+/device:CPU:0 block6_depthwise/BatchNorm/gamma [288]
+/device:CPU:0 block6_depthwise/BatchNorm/beta [288]
+/device:CPU:0 block6_projection/conv_1 [1, 1, 288, 88]
+/device:CPU:0 block6_projection/BatchNorm/gamma [88]
+/device:CPU:0 block6_projection/BatchNorm/beta [88]
+/device:CPU:0 block7_expansion/conv_1 [1, 1, 88, 528]
+/device:CPU:0 block7_expansion/BatchNorm/gamma [528]
+/device:CPU:0 block7_expansion/BatchNorm/beta [528]
+/device:CPU:0 block7_depthwise/depthwise_conv_1 [3, 3, 528, 1]
+/device:CPU:0 block7_depthwise/BatchNorm/gamma [528]
+/device:CPU:0 block7_depthwise/BatchNorm/beta [528]
+/device:CPU:0 block7_projection/conv_1 [1, 1, 528, 88]
+/device:CPU:0 block7_projection/BatchNorm/gamma [88]
+/device:CPU:0 block7_projection/BatchNorm/beta [88]
+/device:CPU:0 block8_expansion/conv_1 [1, 1, 88, 528]
+/device:CPU:0 block8_expansion/BatchNorm/gamma [528]
+/device:CPU:0 block8_expansion/BatchNorm/beta [528]
+/device:CPU:0 block8_depthwise/depthwise_conv_1 [3, 3, 528, 1]
+/device:CPU:0 block8_depthwise/BatchNorm/gamma [528]
+/device:CPU:0 block8_depthwise/BatchNorm/beta [528]
+/device:CPU:0 block8_projection/conv_1 [1, 1, 528, 88]
+/device:CPU:0 block8_projection/BatchNorm/gamma [88]
+/device:CPU:0 block8_projection/BatchNorm/beta [88]
+/device:CPU:0 block9_expansion/conv_1 [1, 1, 88, 528]
+/device:CPU:0 block9_expansion/BatchNorm/gamma [528]
+/device:CPU:0 block9_expansion/BatchNorm/beta [528]
+/device:CPU:0 block9_depthwise/depthwise_conv_1 [3, 3, 528, 1]
+/device:CPU:0 block9_depthwise/BatchNorm/gamma [528]
+/device:CPU:0 block9_depthwise/BatchNorm/beta [528]
+/device:CPU:0 block9_projection/conv_1 [1, 1, 528, 88]
+/device:CPU:0 block9_projection/BatchNorm/gamma [88]
+/device:CPU:0 block9_projection/BatchNorm/beta [88]
+/device:CPU:0 block10_expansion/conv_1 [1, 1, 88, 528]
+/device:CPU:0 block10_expansion/BatchNorm/gamma [528]
+/device:CPU:0 block10_expansion/BatchNorm/beta [528]
+/device:CPU:0 block10_depthwise/depthwise_conv_1 [3, 3, 528, 1]
+/device:CPU:0 block10_depthwise/BatchNorm/gamma [528]
+/device:CPU:0 block10_depthwise/BatchNorm/beta [528]
+/device:CPU:0 block10_projection/conv_1 [1, 1, 528, 136]
+/device:CPU:0 block10_projection/BatchNorm/gamma [136]
+/device:CPU:0 block10_projection/BatchNorm/beta [136]
+/device:CPU:0 block11_expansion/conv_1 [1, 1, 136, 816]
+/device:CPU:0 block11_expansion/BatchNorm/gamma [816]
+/device:CPU:0 block11_expansion/BatchNorm/beta [816]
+/device:CPU:0 block11_depthwise/depthwise_conv_1 [3, 3, 816, 1]
+/device:CPU:0 block11_depthwise/BatchNorm/gamma [816]
+/device:CPU:0 block11_depthwise/BatchNorm/beta [816]
+/device:CPU:0 block11_projection/conv_1 [1, 1, 816, 136]
+/device:CPU:0 block11_projection/BatchNorm/gamma [136]
+/device:CPU:0 block11_projection/BatchNorm/beta [136]
+/device:CPU:0 block12_expansion/conv_1 [1, 1, 136, 816]
+/device:CPU:0 block12_expansion/BatchNorm/gamma [816]
+/device:CPU:0 block12_expansion/BatchNorm/beta [816]
+/device:CPU:0 block12_depthwise/depthwise_conv_1 [3, 3, 816, 1]
+/device:CPU:0 block12_depthwise/BatchNorm/gamma [816]
+/device:CPU:0 block12_depthwise/BatchNorm/beta [816]
+/device:CPU:0 block12_projection/conv_1 [1, 1, 816, 136]
+/device:CPU:0 block12_projection/BatchNorm/gamma [136]
+/device:CPU:0 block12_projection/BatchNorm/beta [136]
+/device:CPU:0 block13_expansion/conv_1 [1, 1, 136, 816]
+/device:CPU:0 block13_expansion/BatchNorm/gamma [816]
+/device:CPU:0 block13_expansion/BatchNorm/beta [816]
+/device:CPU:0 block13_depthwise/depthwise_conv_1 [3, 3, 816, 1]
+/device:CPU:0 block13_depthwise/BatchNorm/gamma [816]
+/device:CPU:0 block13_depthwise/BatchNorm/beta [816]
+/device:CPU:0 block13_projection/conv_1 [1, 1, 816, 224]
+/device:CPU:0 block13_projection/BatchNorm/gamma [224]
+/device:CPU:0 block13_projection/BatchNorm/beta [224]
+/device:CPU:0 block14_expansion/conv_1 [1, 1, 224, 1344]
+/device:CPU:0 block14_expansion/BatchNorm/gamma [1344]
+/device:CPU:0 block14_expansion/BatchNorm/beta [1344]
+/device:CPU:0 block14_depthwise/depthwise_conv_1 [3, 3, 1344, 1]
+/device:CPU:0 block14_depthwise/BatchNorm/gamma [1344]
+/device:CPU:0 block14_depthwise/BatchNorm/beta [1344]
+/device:CPU:0 block14_projection/conv_1 [1, 1, 1344, 224]
+/device:CPU:0 block14_projection/BatchNorm/gamma [224]
+/device:CPU:0 block14_projection/BatchNorm/beta [224]
+/device:CPU:0 block15_expansion/conv_1 [1, 1, 224, 1344]
+/device:CPU:0 block15_expansion/BatchNorm/gamma [1344]
+/device:CPU:0 block15_expansion/BatchNorm/beta [1344]
+/device:CPU:0 block15_depthwise/depthwise_conv_1 [3, 3, 1344, 1]
+/device:CPU:0 block15_depthwise/BatchNorm/gamma [1344]
+/device:CPU:0 block15_depthwise/BatchNorm/beta [1344]
+/device:CPU:0 block15_projection/conv_1 [1, 1, 1344, 224]
+/device:CPU:0 block15_projection/BatchNorm/gamma [224]
+/device:CPU:0 block15_projection/BatchNorm/beta [224]
+/device:CPU:0 block16_expansion/conv_1 [1, 1, 224, 1344]
+/device:CPU:0 block16_expansion/BatchNorm/gamma [1344]
+/device:CPU:0 block16_expansion/BatchNorm/beta [1344]
+/device:CPU:0 block16_depthwise/depthwise_conv_1 [3, 3, 1344, 1]
+/device:CPU:0 block16_depthwise/BatchNorm/gamma [1344]
+/device:CPU:0 block16_depthwise/BatchNorm/beta [1344]
+/device:CPU:0 block16_projection/conv_1 [1, 1, 1344, 448]
+/device:CPU:0 block16_projection/BatchNorm/gamma [448]
+/device:CPU:0 block16_projection/BatchNorm/beta [448]
+/device:CPU:0 last/conv_1 [1, 1, 448, 1792]
+/device:CPU:0 last/BatchNorm/gamma [1792]
+/device:CPU:0 last/BatchNorm/beta [1792]
+/device:CPU:0 logit/fc_1 [1792, 1000]
+/device:CPU:0 logit/fc_bias_1 [1000]
+Parameters: 6108776 {'batchnorm': 47936, 'fc': 1793000, 'conv': 4267840}
+MACs: 582195824
+MEMs: 18699
+Training model on GPU 1
+Perform input channel normalization in GPU for speed
+In the inception_v2 argumentation, image are already scaled to [0,1]
+mean = [0.485 0.456 0.406] std = [0.229 0.224 0.225]
+Input data format is NHWC, convert to NCHW
+Add L2 weight decay 4e-05 to following trainable variables:
+['init/conv_1', 'block0_projection/conv_1', 'block1_expansion/conv_1', 'block1_projection/conv_1', 'block2_expansion/conv_1', 'block2_projection/conv_1', 'block3_expansion/conv_1', 'block3_projection/conv_1', 'block4_expansion/conv_1', 'block4_projection/conv_1', 'block5_expansion/conv_1', 'block5_projection/conv_1', 'block6_expansion/conv_1', 'block6_projection/conv_1', 'block7_expansion/conv_1', 'block7_projection/conv_1', 'block8_expansion/conv_1', 'block8_projection/conv_1', 'block9_expansion/conv_1', 'block9_projection/conv_1', 'block10_expansion/conv_1', 'block10_projection/conv_1', 'block11_expansion/conv_1', 'block11_projection/conv_1', 'block12_expansion/conv_1', 'block12_projection/conv_1', 'block13_expansion/conv_1', 'block13_projection/conv_1', 'block14_expansion/conv_1', 'block14_projection/conv_1', 'block15_expansion/conv_1', 'block15_projection/conv_1', 'block16_expansion/conv_1', 'block16_projection/conv_1', 'last/conv_1', 'logit/fc_1']
+Testing model on GPU 1
+Perform input channel normalization in GPU for speed
+In the inception_v2 argumentation, image are already scaled to [0,1]
+mean = [0.485 0.456 0.406] std = [0.229 0.224 0.225]
+Input data format is NHWC, convert to NCHW
+----------------------------------------------------------------------------------------------------
+Epoch: 001 Loss: 5.042869 Train: 0.9013 Test: 0.7772 lr: 0.1000 FPS: 388 
+Epoch: 002 Loss: 3.738181 Train: 0.7574 Test: 0.6569 lr: 0.0999 FPS: 391 B S
+Epoch: 003 Loss: 3.248808 Train: 0.6819 Test: 0.5929 lr: 0.0998 FPS: 392 B S
+Epoch: 004 Loss: 2.974156 Train: 0.6363 Test: 0.5619 lr: 0.0996 FPS: 392 B S
+Epoch: 005 Loss: 2.798561 Train: 0.6068 Test: 0.5228 lr: 0.0994 FPS: 392 B S
+Epoch: 006 Loss: 2.671734 Train: 0.5838 Test: 0.5167 lr: 0.0991 FPS: 392 B S
+Epoch: 007 Loss: 2.576786 Train: 0.5673 Test: 0.4808 lr: 0.0988 FPS: 392 B S
+Epoch: 008 Loss: 2.501956 Train: 0.5536 Test: 0.4679 lr: 0.0984 FPS: 392 B S
+Epoch: 009 Loss: 2.439756 Train: 0.5420 Test: 0.4542 lr: 0.0980 FPS: 392 B S
+Epoch: 010 Loss: 2.385430 Train: 0.5326 Test: 0.4581 lr: 0.0976 FPS: 393 
+Epoch: 011 Loss: 2.340579 Train: 0.5236 Test: 0.4416 lr: 0.0970 FPS: 392 B S
+Epoch: 012 Loss: 2.304335 Train: 0.5176 Test: 0.4330 lr: 0.0965 FPS: 392 B S
+Epoch: 013 Loss: 2.266457 Train: 0.5104 Test: 0.4274 lr: 0.0959 FPS: 391 B S
+Epoch: 014 Loss: 2.240715 Train: 0.5054 Test: 0.4265 lr: 0.0952 FPS: 392 B S
+Epoch: 015 Loss: 2.210795 Train: 0.5001 Test: 0.4194 lr: 0.0946 FPS: 392 B S
+Epoch: 016 Loss: 2.188864 Train: 0.4959 Test: 0.4117 lr: 0.0938 FPS: 392 B S
+Epoch: 017 Loss: 2.166002 Train: 0.4912 Test: 0.4150 lr: 0.0930 FPS: 392 
+Epoch: 018 Loss: 2.145188 Train: 0.4875 Test: 0.4070 lr: 0.0922 FPS: 392 B S
+Epoch: 019 Loss: 2.127967 Train: 0.4841 Test: 0.4062 lr: 0.0914 FPS: 392 B S
+Epoch: 020 Loss: 2.109439 Train: 0.4804 Test: 0.4042 lr: 0.0905 FPS: 392 B S
+Epoch: 021 Loss: 2.095646 Train: 0.4781 Test: 0.3972 lr: 0.0895 FPS: 392 B S
+Epoch: 022 Loss: 2.077859 Train: 0.4743 Test: 0.4021 lr: 0.0885 FPS: 392 
+Epoch: 023 Loss: 2.063014 Train: 0.4720 Test: 0.3940 lr: 0.0875 FPS: 392 B S
+Epoch: 024 Loss: 2.051529 Train: 0.4698 Test: 0.3937 lr: 0.0864 FPS: 392 B S
+Epoch: 025 Loss: 2.036848 Train: 0.4668 Test: 0.3897 lr: 0.0854 FPS: 392 B S
+Epoch: 026 Loss: 2.024388 Train: 0.4648 Test: 0.3840 lr: 0.0842 FPS: 392 B S
+Epoch: 027 Loss: 2.011043 Train: 0.4619 Test: 0.3873 lr: 0.0831 FPS: 392 
+Epoch: 028 Loss: 1.998996 Train: 0.4598 Test: 0.3783 lr: 0.0819 FPS: 392 B S
+Epoch: 029 Loss: 1.988758 Train: 0.4569 Test: 0.3814 lr: 0.0806 FPS: 390 
+Epoch: 030 Loss: 1.976598 Train: 0.4553 Test: 0.3759 lr: 0.0794 FPS: 390 B S
+Epoch: 031 Loss: 1.964729 Train: 0.4527 Test: 0.3819 lr: 0.0781 FPS: 389 
+Epoch: 032 Loss: 1.953743 Train: 0.4506 Test: 0.3735 lr: 0.0768 FPS: 391 B S
+Epoch: 033 Loss: 1.939920 Train: 0.4478 Test: 0.3777 lr: 0.0755 FPS: 392 
+Epoch: 034 Loss: 1.931453 Train: 0.4462 Test: 0.3722 lr: 0.0741 FPS: 392 B S
+Epoch: 035 Loss: 1.918538 Train: 0.4433 Test: 0.3642 lr: 0.0727 FPS: 392 B S
+Epoch: 036 Loss: 1.907695 Train: 0.4416 Test: 0.3603 lr: 0.0713 FPS: 392 B S
+Epoch: 037 Loss: 1.899102 Train: 0.4397 Test: 0.3632 lr: 0.0699 FPS: 392 
+Epoch: 038 Loss: 1.882175 Train: 0.4364 Test: 0.3644 lr: 0.0684 FPS: 391 
+Epoch: 039 Loss: 1.874062 Train: 0.4349 Test: 0.3590 lr: 0.0669 FPS: 391 B S
+Epoch: 040 Loss: 1.863990 Train: 0.4329 Test: 0.3535 lr: 0.0655 FPS: 392 B S
+Epoch: 041 Loss: 1.852083 Train: 0.4307 Test: 0.3576 lr: 0.0639 FPS: 392 
+Epoch: 042 Loss: 1.843858 Train: 0.4289 Test: 0.3491 lr: 0.0624 FPS: 391 B S
+Epoch: 043 Loss: 1.830630 Train: 0.4264 Test: 0.3550 lr: 0.0609 FPS: 392 
+Epoch: 044 Loss: 1.820077 Train: 0.4235 Test: 0.3453 lr: 0.0594 FPS: 391 B S
+Epoch: 045 Loss: 1.808216 Train: 0.4215 Test: 0.3468 lr: 0.0578 FPS: 391 
+Epoch: 046 Loss: 1.797224 Train: 0.4191 Test: 0.3451 lr: 0.0563 FPS: 391 B S
+Epoch: 047 Loss: 1.786603 Train: 0.4172 Test: 0.3446 lr: 0.0547 FPS: 392 B S
+Epoch: 048 Loss: 1.773730 Train: 0.4148 Test: 0.3400 lr: 0.0531 FPS: 390 B S
+Epoch: 049 Loss: 1.762516 Train: 0.4122 Test: 0.3392 lr: 0.0516 FPS: 389 B S
+Epoch: 050 Loss: 1.748832 Train: 0.4100 Test: 0.3388 lr: 0.0500 FPS: 392 B S
+Epoch: 051 Loss: 1.738148 Train: 0.4075 Test: 0.3352 lr: 0.0484 FPS: 392 B S
+Epoch: 052 Loss: 1.725356 Train: 0.4053 Test: 0.3351 lr: 0.0469 FPS: 391 B S
+Epoch: 053 Loss: 1.712549 Train: 0.4027 Test: 0.3286 lr: 0.0453 FPS: 392 B S
+Epoch: 054 Loss: 1.701082 Train: 0.4003 Test: 0.3328 lr: 0.0437 FPS: 390 
+Epoch: 055 Loss: 1.687672 Train: 0.3973 Test: 0.3269 lr: 0.0422 FPS: 390 B S
+Epoch: 056 Loss: 1.676208 Train: 0.3948 Test: 0.3274 lr: 0.0406 FPS: 392 
+Epoch: 057 Loss: 1.663868 Train: 0.3925 Test: 0.3249 lr: 0.0391 FPS: 392 B S
+Epoch: 058 Loss: 1.650448 Train: 0.3900 Test: 0.3210 lr: 0.0376 FPS: 390 B S
+Epoch: 059 Loss: 1.637664 Train: 0.3872 Test: 0.3202 lr: 0.0361 FPS: 391 B S
+Epoch: 060 Loss: 1.624859 Train: 0.3843 Test: 0.3185 lr: 0.0345 FPS: 391 B S
+Epoch: 061 Loss: 1.609609 Train: 0.3820 Test: 0.3176 lr: 0.0331 FPS: 392 B S
+Epoch: 062 Loss: 1.595475 Train: 0.3792 Test: 0.3171 lr: 0.0316 FPS: 392 B S
+Epoch: 063 Loss: 1.583576 Train: 0.3763 Test: 0.3140 lr: 0.0301 FPS: 392 B S
+Epoch: 064 Loss: 1.567569 Train: 0.3729 Test: 0.3126 lr: 0.0287 FPS: 392 B S
+Epoch: 065 Loss: 1.554043 Train: 0.3693 Test: 0.3099 lr: 0.0273 FPS: 392 B S
+Epoch: 066 Loss: 1.544133 Train: 0.3674 Test: 0.3094 lr: 0.0259 FPS: 392 B S
+Epoch: 067 Loss: 1.524356 Train: 0.3638 Test: 0.3051 lr: 0.0245 FPS: 392 B S
+Epoch: 068 Loss: 1.512685 Train: 0.3613 Test: 0.3006 lr: 0.0232 FPS: 392 B S
+Epoch: 069 Loss: 1.499888 Train: 0.3586 Test: 0.3005 lr: 0.0219 FPS: 392 B S
+Epoch: 070 Loss: 1.483038 Train: 0.3550 Test: 0.2950 lr: 0.0206 FPS: 392 B S
+Epoch: 071 Loss: 1.470377 Train: 0.3522 Test: 0.2948 lr: 0.0194 FPS: 392 B S
+Epoch: 072 Loss: 1.452983 Train: 0.3484 Test: 0.2945 lr: 0.0181 FPS: 391 B S
+Epoch: 073 Loss: 1.439487 Train: 0.3459 Test: 0.2946 lr: 0.0169 FPS: 392 
+Epoch: 074 Loss: 1.420030 Train: 0.3413 Test: 0.2888 lr: 0.0158 FPS: 392 B S
+Epoch: 075 Loss: 1.408685 Train: 0.3389 Test: 0.2871 lr: 0.0146 FPS: 392 B S
+Epoch: 076 Loss: 1.394116 Train: 0.3359 Test: 0.2844 lr: 0.0136 FPS: 392 B S
+Epoch: 077 Loss: 1.376096 Train: 0.3327 Test: 0.2842 lr: 0.0125 FPS: 392 B S
+Epoch: 078 Loss: 1.361995 Train: 0.3293 Test: 0.2853 lr: 0.0115 FPS: 392 
+Epoch: 079 Loss: 1.347116 Train: 0.3259 Test: 0.2799 lr: 0.0105 FPS: 392 B S
+Epoch: 080 Loss: 1.328440 Train: 0.3220 Test: 0.2789 lr: 0.0095 FPS: 392 B S
+Epoch: 081 Loss: 1.315130 Train: 0.3188 Test: 0.2775 lr: 0.0086 FPS: 392 B S
+Epoch: 082 Loss: 1.299645 Train: 0.3153 Test: 0.2766 lr: 0.0078 FPS: 392 B S
+Epoch: 083 Loss: 1.283857 Train: 0.3124 Test: 0.2732 lr: 0.0070 FPS: 391 B S
+Epoch: 084 Loss: 1.270745 Train: 0.3091 Test: 0.2709 lr: 0.0062 FPS: 391 B S
+Epoch: 085 Loss: 1.254955 Train: 0.3053 Test: 0.2684 lr: 0.0054 FPS: 391 B S
+Epoch: 086 Loss: 1.242423 Train: 0.3028 Test: 0.2672 lr: 0.0048 FPS: 391 B S
+Epoch: 087 Loss: 1.227333 Train: 0.2994 Test: 0.2665 lr: 0.0041 FPS: 391 B S
+Epoch: 088 Loss: 1.214264 Train: 0.2971 Test: 0.2659 lr: 0.0035 FPS: 392 B S
+Epoch: 089 Loss: 1.204105 Train: 0.2943 Test: 0.2645 lr: 0.0030 FPS: 392 B S
+Epoch: 090 Loss: 1.194158 Train: 0.2921 Test: 0.2626 lr: 0.0024 FPS: 392 B S
+Epoch: 091 Loss: 1.183825 Train: 0.2896 Test: 0.2628 lr: 0.0020 FPS: 391 
+Epoch: 092 Loss: 1.174505 Train: 0.2880 Test: 0.2617 lr: 0.0016 FPS: 391 B S
+Epoch: 093 Loss: 1.168254 Train: 0.2860 Test: 0.2612 lr: 0.0012 FPS: 391 B S
+Epoch: 094 Loss: 1.159591 Train: 0.2843 Test: 0.2600 lr: 0.0009 FPS: 391 B S
+Epoch: 095 Loss: 1.154762 Train: 0.2831 Test: 0.2591 lr: 0.0006 FPS: 391 B S
+Epoch: 096 Loss: 1.150514 Train: 0.2823 Test: 0.2588 lr: 0.0004 FPS: 391 B S
+Epoch: 097 Loss: 1.146537 Train: 0.2808 Test: 0.2594 lr: 0.0002 FPS: 391 
+Epoch: 098 Loss: 1.141036 Train: 0.2796 Test: 0.2586 lr: 0.0001 FPS: 390 B S
+Epoch: 099 Loss: 1.142479 Train: 0.2803 Test: 0.2580 lr: 0.0000 FPS: 391 B S
+----------------------------------------------------------------------------------------------------
+Optimization ended at 18-12-17 08:35:56
