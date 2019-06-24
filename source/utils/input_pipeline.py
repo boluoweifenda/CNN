@@ -4,6 +4,7 @@ from __future__ import print_function
 
 from preprocess.preprocess_factory import get_preprocess_fn
 import tensorflow as tf
+from preprocess.inception_preprocess import parse_record
 from tensorflow.contrib import data
 
 
@@ -32,29 +33,31 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, see
     to increase this number if you have a large number of CPU cores.
     '''
     cycle_length = min(10, len(file_name))
-    dataset = dataset.interleave(tf.data.TFRecordDataset, cycle_length=cycle_length)
+    dataset = dataset.interleave(
+      tf.data.TFRecordDataset, cycle_length=cycle_length, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     # We prefetch a batch at a time, This can help smooth out the time taken to
     # load input files as we go through shuffling and processing.
     dataset = dataset.prefetch(buffer_size=batch_size)
 
     if is_training:
-      dataset = dataset.apply(tf.data.experimental.shuffle_and_repeat(buffer_size=10000, seed=seed))
+      dataset = dataset.apply(
+        tf.data.experimental.shuffle_and_repeat(buffer_size=10000, seed=seed))
     else:
       dataset = dataset.repeat()
 
     def map_func(record):
-      # Some images in imagenet are grayscaled.
+      # Some images in imagenet/tiny_imagenet are grayscaled.
       num_channel = 3 if name in ['imagenet', 'tiny_imagenet'] else 0
 
       if preprocess_name != 'inception':
         parsed = tf.parse_single_example(record, feature)
         image = decoder(parsed['image/encoded'], num_channel)
+        label = parsed['image/class/label']
         # Perform additional preprocessing on the parsed data.
         image = image_preprocessing_fn(image, datasets, is_training=is_training)
-        label = parsed['image/class/label']
       else:
-        from preprocess.inception_preprocess import parse_record
+        # imagenet input pipeline merge the decode and crop operationsa.
         image, label = parse_record(record, is_training)
       label = tf.one_hot(label, num_class)
       return image, label

@@ -63,7 +63,11 @@ class MobileNet(Net):
       Expansion = [1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
 
       with tf.variable_scope('init'):
-        x = self.conv(x, 3, Out[0], stride=2)
+        if self.dataset == 'imagenet':
+          x = self.conv(x, 3, Out[0], stride=2)
+        else:
+          Stride, Out, Expansion = Stride[2:], Out[2:], Expansion[2:]
+          x = self.conv(x, 3, Out[0])
         x = self.batch_norm(x)
         x = self.activation(x)
 

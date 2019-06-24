@@ -103,9 +103,9 @@ class Net(object):
   def activation(self, x):
     return tf.nn.relu(x)
 
-  def dropout(self, x, drop_prob, noise_shape=None, seed=None, name=None):
-    if drop_prob > 0.00001 and self.is_training:
-      x = tf.nn.dropout(x, keep_prob=1-drop_prob, noise_shape=noise_shape, seed=seed, name=name)
+  def dropout(self, x, rate, noise_shape=None, seed=None, name=None):
+    if rate > 0.00001 and self.is_training:
+      x = tf.nn.dropout(x, rate=rate, noise_shape=noise_shape, seed=seed, name=name)
     return x
 
   def reshape(self, x, shape=None):

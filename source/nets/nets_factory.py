@@ -11,6 +11,7 @@ from nets import resnet
 from nets import densenet
 from nets import mlp
 from nets import shufflenet_v2
+from nets import shiftnet
 
 nets_map = {
   'lenet': lenet.LeNet,
@@ -22,6 +23,7 @@ nets_map = {
   'densenet': densenet.DenseNet,
   'mlp': mlp.MLP,
   'shufflenet_v2': shufflenet_v2.ShuffleNet,
+  'shiftnet': shiftnet.ShiftNet,
 }
 
 
