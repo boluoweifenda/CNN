@@ -32,9 +32,12 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, seed=None):
     but high enough to provide the benefits of parallelization. You may want
     to increase this number if you have a large number of CPU cores.
     '''
-    cycle_length = min(10, len(file_name))
+    cycle_length = min(8, len(file_name))
     dataset = dataset.interleave(
-      tf.data.TFRecordDataset, cycle_length=cycle_length)
+      tf.data.TFRecordDataset,
+      cycle_length=cycle_length,
+      num_parallel_calls=cycle_length,
+    )
 
     # We prefetch a batch at a time, This can help smooth out the time taken to
     # load input files as we go through shuffling and processing.
@@ -71,8 +74,7 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, seed=None):
       tf.data.experimental.map_and_batch(
         map_func,
         batch_size=batch_size,
-        # num_parallel_batches=16,
-        num_parallel_calls=16,
+        num_parallel_calls=8,
       ))
 
     '''
