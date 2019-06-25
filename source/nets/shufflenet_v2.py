@@ -67,10 +67,15 @@ class ShuffleNet(Net):
     Out = [244, 488, 976, 2048]  # 2.0x
 
     with tf.variable_scope('init'):
-      x = self.conv(x, 3, 24, stride=2)
-      x = self.batch_norm(x)
-      x = self.activation(x)
-      x = self.pool(x, type='MAX', ksize=3, stride=2)
+      if self.dataset == 'imagenet':
+        x = self.conv(x, 3, 24, stride=2)
+        x = self.batch_norm(x)
+        x = self.activation(x)
+        x = self.pool(x, type='MAX', ksize=3, stride=2)
+      else:
+        x = self.conv(x, 3, 24)
+        x = self.batch_norm(x)
+        x = self.activation(x)
 
     for stage in range(len(Repeat)):
       with tf.variable_scope('S%d' % stage):

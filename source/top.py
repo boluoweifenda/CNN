@@ -249,8 +249,8 @@ def main():
 
   assert batch_size % num_worker == 0, 'batch_size %d can not be divided by number of workers %d' % (batch_size, num_worker)
 
-  iterator_train = get_batch(dataset_train, preprocess, True, batch_size // num_worker, num_worker, seed=seed)
-  iterator_test = get_batch(dataset_test, preprocess, False, 100, num_worker, seed=seed)
+  iterator_train = get_batch(dataset_train, preprocess, True, batch_size // num_worker, seed=seed)
+  iterator_test = get_batch(dataset_test, preprocess, False, 100, seed=seed)
 
   ####################################################################################################
 

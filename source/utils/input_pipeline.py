@@ -8,7 +8,7 @@ from preprocess.inception_preprocess import parse_record
 from tensorflow.contrib import data
 
 
-def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, seed=None):
+def get_batch(datasets, preprocess_name, is_training, batch_size, seed=None):
   with tf.device('/cpu:0'):
 
     num_class = datasets.num_class
@@ -34,7 +34,7 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, see
     '''
     cycle_length = min(10, len(file_name))
     dataset = dataset.interleave(
-      tf.data.TFRecordDataset, cycle_length=cycle_length, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+      tf.data.TFRecordDataset, cycle_length=cycle_length)
 
     # We prefetch a batch at a time, This can help smooth out the time taken to
     # load input files as we go through shuffling and processing.
@@ -71,7 +71,9 @@ def get_batch(datasets, preprocess_name, is_training, batch_size, num_gpu=1, see
       tf.data.experimental.map_and_batch(
         map_func,
         batch_size=batch_size,
-        num_parallel_calls=tf.data.experimental.AUTOTUNE))
+        # num_parallel_batches=16,
+        num_parallel_calls=16,
+      ))
 
     '''
     Operations between the final prefetch and the get_next call to the iterator
