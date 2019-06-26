@@ -60,40 +60,74 @@ class ShuffleNet(Net):
 
   def model(self, x):
 
-    Repeat = [4, 8, 4]
-    # Out = [48, 96, 192, 1024]  # 0.5x
-    # Out = [116, 232, 464, 1024]  # 1.0x
-    # Out = [176, 352, 704, 1024]  # 1.5x
-    Out = [244, 488, 976, 2048]  # 2.0x
+    print('ShuffleNet for %s dataset' % self.dataset)
 
-    with tf.variable_scope('init'):
-      if self.dataset == 'imagenet':
-        x = self.conv(x, 3, 24, stride=2)
-        x = self.batch_norm(x)
-        x = self.activation(x)
-        x = self.pool(x, type='MAX', ksize=3, stride=2)
-      else:
-        x = self.conv(x, 3, 24)
+    if self.dataset in ['cifar10', 'cifar100']:
+
+      Repeat = [9, 9, 9]
+      Out = [64, 128, 256, 512]
+      strides = [1, 2, 2]
+
+      with tf.variable_scope('init'):
+        x = self.conv(x, 3, Out[0])
         x = self.batch_norm(x)
         x = self.activation(x)
 
-    for stage in range(len(Repeat)):
-      with tf.variable_scope('S%d' % stage):
-        for repeat in range(Repeat[stage]):
-          with tf.variable_scope('R%d' % repeat):
-            x = self._basic(x, c_out=Out[stage], stride=2 if repeat is 0 else 1)
+      for stage in range(len(Repeat)):
+        with tf.variable_scope('S%d' % stage):
+          for repeat in range(Repeat[stage]):
+            with tf.variable_scope('R%d' % repeat):
+              x = self._basic(x, c_out=Out[stage], stride=strides[stage] if repeat == 0 else 1)
 
-    with tf.variable_scope('last'):
-      x = self.conv(x, 1, Out[-1])
-      x = self.batch_norm(x)
-      x = self.activation(x)
-    with tf.variable_scope('global_avg_pool'):
-      x = self.pool(x, 'GLO')
+      with tf.variable_scope('last'):
+        x = self.conv(x, 1, Out[-1])
+        x = self.batch_norm(x)
+        x = self.activation(x)
+      with tf.variable_scope('global_avg_pool'):
+        x = self.pool(x, 'GLO')
 
-    with tf.variable_scope('logit'):
-      x = self.fc(x, self.shape_y[1], name='fc', bias=True)
+      with tf.variable_scope('logit'):
+        x = self.fc(x, self.shape_y[1], name='fc')
 
-    return x
+      return x
+
+    elif self.dataset in ['imagenet', 'tiny_imagenet']:
+
+      Repeat = [4, 8, 4]
+      # Out = [48, 96, 192, 1024]  # 0.5x
+      # Out = [116, 232, 464, 1024]  # 1.0x
+      # Out = [176, 352, 704, 1024]  # 1.5x
+      Out = [244, 488, 976, 2048]  # 2.0x
+
+      with tf.variable_scope('init'):
+
+        if self.dataset == 'imagenet':
+          x = self.conv(x, 3, 24, stride=2)
+          x = self.batch_norm(x)
+          x = self.activation(x)
+          x = self.pool(x, type='MAX', ksize=3, stride=2)
+        else:
+          x = self.conv(x, 3, 24)
+          x = self.batch_norm(x)
+          x = self.activation(x)
+
+      for stage in range(len(Repeat)):
+        with tf.variable_scope('S%d' % stage):
+          for repeat in range(Repeat[stage]):
+            with tf.variable_scope('R%d' % repeat):
+              x = self._basic(x, c_out=Out[stage], stride=2 if repeat is 0 else 1)
+
+      with tf.variable_scope('last'):
+        x = self.conv(x, 1, Out[-1])
+        x = self.batch_norm(x)
+        x = self.activation(x)
+      with tf.variable_scope('global_avg_pool'):
+        x = self.pool(x, 'GLO')
+
+      with tf.variable_scope('logit'):
+        x = self.fc(x, self.shape_y[1], name='fc', bias=True)
+
+      return x
 
 
 
