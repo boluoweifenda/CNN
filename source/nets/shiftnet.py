@@ -105,5 +105,3 @@ class ShiftNet(Net):
     #     x = self.fc(x, self.shape_y[1], name='fc')
     #
     #   return x
-
-
