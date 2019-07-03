@@ -1,35 +1,28 @@
 import tensorflow as tf
 from nets.net import Net
+from utils.active_shift2d_op import active_shift2d
 
 
 class ShiftNet(Net):
 
   def _group_shift(self, x):
-
-    zeros = [
-      [0, 2, 0, 2],
-      [0, 2, 1, 1],
-      [0, 2, 2, 0],
-      [1, 1, 0, 2],
-      [1, 1, 1, 1],
-      [1, 1, 2, 0],
-      [2, 0, 0, 2],
-      [2, 0, 1, 1],
-      [2, 0, 2, 0],
+    kernel = [
+      [-1, -1],
+      [-1,  0],
+      [-1,  1],
+      [ 0, -1],
+      [ 0,  0],
+      [ 0,  1],
+      [ 1, -1],
+      [ 1,  0],
+      [ 1,  1],
     ]
 
-    num_pattern = len(zeros)
     c_in = self.get_shape(x)[1]
-    assert c_in > num_pattern and c_in % num_pattern == 0, 'channel can not be divided by %d' % num_pattern
+    assert c_in % len(kernel) == 0, 'channel can not be divided by %d' % len(kernel)
 
-    x_slide = tf.split(x, num_pattern, axis=1)
-    x_pad = []
-
-    for i in range(num_pattern):
-      pad = tf.constant([[0, 0], [0, 0], zeros[i][:2], zeros[i][2:]])
-      x_pad.append(tf.pad(x_slide[i], paddings=pad))
-    x = tf.concat(x_pad, axis=1)
-    x = x[..., 1:-1, 1:-1]
+    kernel = tf.constant(kernel)
+    x = active_shift2d(x, kernel, strides=[1, 1, 1, 1], paddings=[0, 0, 0, 0])
 
     return x
 
@@ -41,8 +34,6 @@ class ShiftNet(Net):
       x = self.batch_norm(x)
       x = self.activation(x)
       x = self.conv(x, 1, c_in * expansion, stride=1)
-
-    x = self._group_shift(x)
 
     with tf.variable_scope('C1'):
       x = self.batch_norm(x)
