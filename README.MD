@@ -10,7 +10,7 @@ for
 ## Prerequisites
 - A computer with NVIDIA GPUs
 - CUDA + CuDNN
-- TensorFlow (GPU version) tested: 1.14, 1.12
+- TensorFlow (GPU version) tested: 1.14, 1.13, 1.12
 - python3
 - tqdm
 
