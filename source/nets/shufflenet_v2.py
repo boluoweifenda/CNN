@@ -125,6 +125,7 @@ class ShuffleNet(Net):
         x = self.pool(x, 'GLO')
 
       with tf.variable_scope('logit'):
+        x = self.dropout(x, 0.2)
         x = self.fc(x, self.shape_y[1], name='fc', bias=True)
 
       return x

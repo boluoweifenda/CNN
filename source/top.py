@@ -265,8 +265,8 @@ def main():
     print('Testing the speed of data input pipeline.')
     sess = get_session(gpu_list)
     while True:
-      for batch in tqdm(range(num_batch), desc='Input pipeline', leave=False, smoothing=0.1):
-        batch_input_ = sess.run(batch_input)
+      for _ in tqdm(range(num_batch), desc='Input pipeline', leave=False, smoothing=0.1):
+        sess.run(batch_input)
 
   ####################################################################################################
 
