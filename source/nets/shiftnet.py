@@ -57,7 +57,7 @@ class ShiftNet(Net):
 
     if self.dataset in ['cifar10', 'cifar100']:
 
-      num_residual = 6  # totoal layer: 6n+2
+      num_residual = 3  # totoal layer: 6n+2
       strides = [1, 2, 2]
       filters = [18, 36, 72]
       expansion = 6
