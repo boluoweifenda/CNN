@@ -10,7 +10,7 @@ batch_size = 256
 data_format = 'NCHW'
 
 dataset = 'imagenet'  # 'mnist','svhn','cifar10', 'cifar100', 'imagenet', 'fashion'
-preprocess = 'inception_v2'  # 'mnist', 'cifar', 'alexnet', 'inception_v2'
+preprocess = 'inception'  # 'mnist', 'cifar', 'alexnet', 'inception'
 network = 'resnet'  # 'mlp', 'lenet', 'alexnet', 'resnet', 'densenet', 'mobilenet_v1', 'mobilenet_v2', shufflenet_v2
 
 path_load = None

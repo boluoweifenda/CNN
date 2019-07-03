@@ -7,7 +7,9 @@ TF_LFLAGS=( $(python3 -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.g
 
 /usr/local/cuda/bin/nvcc -std=c++11 -DNDEBUG -D_MWAITXINTRIN_H_INCLUDED -c -o active_shift2d.cu.o active_shift2d.cu.cc \
   ${TF_CFLAGS[@]} -D GOOGLE_CUDA=1 -x cu -Xcompiler -fPIC \
---expt-relaxed-constexpr -gencode arch=compute_75,code=sm_75 
+--expt-relaxed-constexpr -gencode arch=compute_61,code=sm_61 
+
+# change the compute_architecture and compability according to your GPU
 
 g++ -std=c++11 -shared -D_GLIBCXX_USE_CXX11_ABI=0 -o active_shift2d.so active_shift2d.cc \
   active_shift2d.cu.o ${TF_CFLAGS[@]} -fPIC -lcudart ${TF_LFLAGS[@]}

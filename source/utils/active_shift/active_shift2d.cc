@@ -513,7 +513,7 @@ public:
 	}
 };
 
-//#ifdef GOOGLE_CUDA
+//#if GOOGLE_CUDA
 
 #define REGISTER_GPU(T) \
   REGISTER_KERNEL_BUILDER(                                          \
@@ -528,9 +528,11 @@ public:
 //TF_CALL_double(REGISTER);
 
 REGISTER_GPU(float);
+REGISTER_GPU(double);
 
 
-//#undef REGISTER
+
+#undef REGISTER_GPU
 
 //#endif  // GOOGLE_CUDA
 

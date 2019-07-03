@@ -7,7 +7,7 @@ from tensorflow.python.ops import gradient_checker
 from tensorflow.python.platform import test
 
 
-import lib.active_shift2d_op as active_shift2d_op
+from active_shift2d_op import active_shift2d
 import os
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '2'
@@ -38,7 +38,7 @@ class DepthwiseACUTest(test.TestCase):
               a = tf.constant(arr, dtype=tf.float64)
               c = tf.constant(shift, dtype = np.float64)
             
-              result = active_shift2d_op.active_shift2d_op(a, c, strides=[1, 1, stride_h, stride_w], paddings=[0, 0, pad_h, pad_w])              
+              result = active_shift2d(a, c, strides=[1, 1, stride_h, stride_w], paddings=[0, 0, pad_h, pad_w])
               
               err = gradient_checker.compute_gradient_error(a, arr.shape, 
                                                             result, result.get_shape().as_list(), x_init_value=arr)
@@ -56,7 +56,7 @@ class DepthwiseACUTest(test.TestCase):
               a = tf.constant(arr, dtype=tf.float64)
               c = tf.constant(shift, dtype = np.float64)
             
-              result = active_shift2d_op.active_shift2d_op(a, c, strides=[1, 1, stride_h, stride_w], paddings=[0, 0, pad_h, pad_w])
+              result = active_shift2d(a, c, strides=[1, 1, stride_h, stride_w], paddings=[0, 0, pad_h, pad_w])
                       
               err = gradient_checker.compute_gradient_error(c, shift.shape, 
                                                             result, result.get_shape().as_list(), x_init_value=shift)
