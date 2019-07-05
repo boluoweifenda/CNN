@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import lib.active_shift2d_op as active_shift2d_op
+from active_shift2d_op import active_shift2d
 import os
 
 gpu_list = [0]
@@ -18,7 +18,7 @@ def create_config_proto():
 
 
 fm_np = np.reshape(np.arange(start=1, stop=17), (1,1,4,4))
-kernel_np = np.array([[1, 0.5]])
+kernel_np = np.array([[0, 1]])
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -28,11 +28,10 @@ sess.run(tf.global_variables_initializer())
 
 fm = tf.constant(fm_np, dtype=tf.float32)
 kernel = tf.constant(kernel_np, dtype=np.float32)
-result = active_shift2d_op.active_shift2d_op(fm, kernel, strides=[1, 1, 1, 1], paddings=[0, 0, 0, 0])
+result = active_shift2d(fm, kernel, strides=[1, 1, 1, 1], paddings=[0, 0, 0, 0])
 sm = sess.run(result)
 grad = tf.gradients(result, [fm, kernel])
 res = [sess.run(g) for g in grad]
 
-# print(res[0])
 print(sm)
 

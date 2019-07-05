@@ -42,12 +42,11 @@ class ShiftNet(Net):
       x = self.activation(x)
       x = self.conv(x, 1, c_in, stride=stride)
 
-    with tf.variable_scope('SA'):
-      if stride is not 1 or c_in != c_out:
-        orig_x = self.pool(orig_x, type='AVG', ksize=3, stride=2)
-        x = tf.concat([x, orig_x], axis=1)
-      else:
-        x += orig_x
+    if stride is not 1 or c_in != c_out:
+      orig_x = self.pool(orig_x, type='AVG', ksize=3, stride=2)
+      x = tf.concat([x, orig_x], axis=1)
+    else:
+      x += orig_x
 
     return x
 
@@ -57,11 +56,11 @@ class ShiftNet(Net):
 
     if self.dataset in ['cifar10', 'cifar100']:
 
-      num_residual = 3  # totoal layer: 6n+2
+      num_residual = 4  # totoal layer: 6n+2
       strides = [1, 2, 2]
       filters = [18, 36, 72]
       expansion = 6
-      active = True
+      active = False
 
       with tf.variable_scope('init'):
         x = self.conv(x, 3, filters[0])
@@ -85,20 +84,16 @@ class ShiftNet(Net):
     #
     #   with tf.variable_scope('init'):
     #     x = self.conv(x, 7, 32, stride=2)
-    #     # x = self._batch_norm(x)
-    #     # x = self._activation(x)
-    #     # x = self._pool(x, type='MAX', ksize=3, stride=2)
     #
     #   strides = [2, 1, 2, 1, 2, 1, 2, 1]
     #   repeat = [1, 4, 1, 5, 1, 6, 1, 2]
     #   expansion = [4, 4, 4, 3, 3, 2, 2, 1]
-    #   ksize = [5, 5, 5, 5, 3, 3, 3, 3]
     #   c_out = [64, 64, 128, 128, 256, 256, 512, 512]
     #
     #   for i in range(len(strides)):
     #     for j in range(repeat[i]):
     #       with tf.variable_scope('U%d-%d' % (i, j)):
-    #         x = self._shift_block(x, ksize[i], expansion[i], c_out[i], strides[i])
+    #         x = self._CSC(x, c_out[i], strides[i], expansion[i])
     #
     #   with tf.variable_scope('global_avg_pool'):
     #     x = self.batch_norm(x)
