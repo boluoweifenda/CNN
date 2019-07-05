@@ -37,7 +37,7 @@ class ResNet(Net):
     with tf.variable_scope('SA'):
       if stride is not 1:
         # suggested by "Bag of Tricks for Image Classification with Convolutional Neural Networks"
-        orig_x = self.pool(orig_x, 'AVG', ksize=3, stride=2)
+        orig_x = self.pool(orig_x, 'AVG', ksize=2, stride=2)
       if c_in != c_out:
         orig_x = self.conv(orig_x, 1, c_out)
       x += orig_x
@@ -81,8 +81,8 @@ class ResNet(Net):
       num_residual = [3, 4, 6, 3]  # 50
       # num_residual = [3, 4, 23, 3]  # 101
       strides = [1, 2, 2, 2]
-      filters = [128, 256, 512, 1024]  # 0.5x
-      # filters = [256, 512, 1024, 2048]  # 1.0x
+      # filters = [128, 256, 512, 1024]  # 0.5x
+      filters = [256, 512, 1024, 2048]  # 1.0x
       bottleneck = True
 
       with tf.variable_scope('init'):
