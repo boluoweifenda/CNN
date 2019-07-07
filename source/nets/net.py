@@ -208,7 +208,7 @@ class Net(object):
     x = tf.concat(Y, axis=axis)
 
     if shuffle:
-      x = self.shuffle_channel(x, num_group=num_group, data_format=self.data_format)
+      x = self.shuffle_channel(x, num_group=num_group)
 
     self.H.append(x)
     self.initializer = initializer0
@@ -299,12 +299,11 @@ class Net(object):
     return x
 
   def linear(self, x, name='linear'):
-    data_format = self.data_format
-    x = self.scale(x, name=name + '_s', data_format=data_format)
-    x = self.bias(x, name=name + '_b', data_format=data_format)
+    x = self.scale(x, name=name + '_s')
+    x = self.bias(x, name=name + '_b')
     return x
 
-  def pool(self, x, type, ksize=2, stride=1, padding='SAME'):
+  def pool(self, x, type, ksize=2, stride=2, padding='SAME'):
     data_format = self.data_format
     assert x.get_shape().ndims == 4, 'Invalid pooling shape:' + x.get_shape()
     if type == 'MAX':
