@@ -91,8 +91,10 @@ class Net(object):
         self.error = tf.reduce_mean(tf.cast(tf.not_equal(tf.argmax(out, axis=1), label), dtype=tf.float32))
 
   def window(self, stride_or_ksize):
-    return [1, 1, stride_or_ksize, stride_or_ksize] if self.data_format is 'NCHW' \
-      else [1, stride_or_ksize, stride_or_ksize, 1]
+    if isinstance(stride_or_ksize, int):
+      stride_or_ksize = [stride_or_ksize]*2
+    return [1, 1] + stride_or_ksize if self.data_format is 'NCHW' \
+      else [1] + stride_or_ksize + [1]
 
   def get_shape(self, x):
     return x.get_shape().as_list()
@@ -122,10 +124,11 @@ class Net(object):
         initializer = self.initializer
       return tf.get_variable(name=name, shape=shape, initializer=initializer)
 
-  def conv(self, x, ksize, c_out, stride=1, padding='SAME', bias=False, name='conv'):
+  def conv(self, x, ksize, c_out=None, stride=1, padding='SAME', bias=False, name='conv'):
     data_format = self.data_format
     shape_in = self.get_shape(x)
     c_in = shape_in[1] if data_format is 'NCHW' else shape_in[-1]
+    if c_out is None: c_out = c_in
     W = self.get_variable([ksize, ksize, c_in, c_out], name)
     x = tf.nn.conv2d(x, W, self.window(stride), padding=padding, data_format=data_format, name=name)
     if bias:

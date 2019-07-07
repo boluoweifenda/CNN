@@ -81,8 +81,9 @@ class ResNet(Net):
       num_residual = [3, 4, 6, 3]  # 50
       # num_residual = [3, 4, 23, 3]  # 101
       strides = [1, 2, 2, 2]
-      filters = [128, 256, 512, 1024]  # 0.5x
-      # filters = [256, 512, 1024, 2048]  # 1.0x
+      # filters = [128, 256, 512, 1024]  # 0.5x
+      filters = [256, 512, 1024, 2048]  # 1.0x
+      bottleneck = True
 
       with tf.variable_scope('init'):
         if self.dataset == 'imagenet':
@@ -94,7 +95,7 @@ class ResNet(Net):
       for i in range(len(num_residual)):
         for j in range(num_residual[i]):
           with tf.variable_scope('U%d-%d' % (i, j)):
-            x = self._residual(x, filters[i], stride=strides[i] if j is 0 else 1, bottleneck=True)
+            x = self._residual(x, filters[i], stride=strides[i] if j is 0 else 1, bottleneck=bottleneck)
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)

@@ -94,6 +94,7 @@ class ShuffleNet(Net):
     elif self.dataset in ['imagenet', 'tiny_imagenet']:
 
       Repeat = [4, 8, 4]
+      Stride = [2, 2, 2]
       # Out = [48, 96, 192, 1024]  # 0.5x
       # Out = [116, 232, 464, 1024]  # 1.0x
       # Out = [176, 352, 704, 1024]  # 1.5x
@@ -115,7 +116,7 @@ class ShuffleNet(Net):
         with tf.variable_scope('S%d' % stage):
           for repeat in range(Repeat[stage]):
             with tf.variable_scope('R%d' % repeat):
-              x = self._basic(x, c_out=Out[stage], stride=2 if repeat is 0 else 1)
+              x = self._basic(x, c_out=Out[stage], stride=Stride[stage] if repeat is 0 else 1)
 
       with tf.variable_scope('last'):
         x = self.conv(x, 1, Out[-1])
