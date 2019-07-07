@@ -35,3 +35,4 @@ res = [sess.run(g) for g in grad]
 
 print(sm)
 
+
