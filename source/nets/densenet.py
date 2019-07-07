@@ -4,7 +4,7 @@ from nets.net import Net
 
 class DenseNet(Net):
 
-  def _denseLayer(self, x, bottleneck, growth, drop_prob=0.):
+  def dense(self, x, bottleneck, growth, drop_prob=0.):
     x_orth = x
 
     x = self.batch_norm(x)
@@ -24,7 +24,7 @@ class DenseNet(Net):
     x = tf.concat([x_orth, x], axis=1)  # NCHW
     return x
 
-  def _transitionLayer(self, x, reduction, drop_prob):
+  def transition(self, x, reduction, drop_prob):
     c_out = int(self.get_shape(x)[1] * reduction)
     x = self.batch_norm(x)
     x = self.activation(x)
@@ -52,10 +52,10 @@ class DenseNet(Net):
       for i in range(num_block):
         for j in range(num_dense):
           with tf.variable_scope('B%d_L%d' % (i, j)):
-            x = self._denseLayer(x, bottleneck, growthRate, drop_prob=drop_prob)
+            x = self.dense(x, bottleneck, growthRate, drop_prob=drop_prob)
         if i is num_block - 1: break
         with tf.variable_scope('T%d' % i):
-          x = self._transitionLayer(x, reduction=reduction, drop_prob=drop_prob)
+          x = self.transition(x, reduction=reduction, drop_prob=drop_prob)
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)
@@ -70,7 +70,7 @@ class DenseNet(Net):
     elif self.dataset in ['imagenet', 'tiny_imagenet']:
 
       bottleneck = True
-      growthRate = 32
+      growth = 32
       drop_prob = 0.0
       reduction = 0.5
       stages = [6, 12, 24, 16]  # densenet121
@@ -80,18 +80,18 @@ class DenseNet(Net):
 
       with tf.variable_scope('init'):
         if self.dataset == 'imagenet':
-          x = self.conv(x, 7, 2 * growthRate, stride=2)
+          x = self.conv(x, 7, 2 * growth, stride=2)
           x = self.pool(x, 'MAX', 3, 2)
         else:
-          x = self.conv(x, 3, 2 * growthRate)
+          x = self.conv(x, 3, 2 * growth)
 
       for i in range(len(stages)):
         for j in range(stages[i]):
           with tf.variable_scope('B%d_L%d' % (i, j)):
-            x = self._denseLayer(x, bottleneck, growthRate, drop_prob)
+            x = self.dense(x, bottleneck, growth, drop_prob)
         if i is len(stages) - 1: break
         with tf.variable_scope('T%d' % i):
-          x = self._transitionLayer(x, reduction=reduction, drop_prob=drop_prob)
+          x = self.transition(x, reduction=reduction, drop_prob=drop_prob)
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)
@@ -99,6 +99,6 @@ class DenseNet(Net):
         x = self.pool(x, 'GLO')
 
       with tf.variable_scope('logit'):
-        x = self.fc(x, self.shape_y[1], name='fc')
+        x = self.fc(x, self.shape_y[1], name='fc', bias=True)
 
       return x
