@@ -32,8 +32,6 @@ class ResNet(Net):
         x = self.activation(x)
         x = self.conv(x, 3, c_out)
 
-    # x = self.squeeze_and_excitation(x, r=16)
-
     with tf.variable_scope('SA'):
       if stride is not 1:
         # suggested by "Bag of Tricks for Image Classification with Convolutional Neural Networks"
@@ -50,7 +48,7 @@ class ResNet(Net):
 
     if self.dataset in ['cifar10', 'cifar100']:
 
-      num_residual = 6  # totoal layer: 6n+2 / 9n+2
+      num_residual = 6  # total layer: 6n+2 / 9n+2
       bottleneck = True
       strides = [1, 2, 2]
       filters = [16, 32, 64]
