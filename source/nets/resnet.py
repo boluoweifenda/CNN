@@ -7,42 +7,40 @@ class ResNet(Net):
   # pre-activation residual block
   def _residual(self, x, c_out, stride=1, bottleneck=False):
     c_in = self.get_shape(x)[1]
-    orig_x = x
+    shortcut = x
 
-    if bottleneck:
-      with tf.variable_scope('S0'):
-        x = self.batch_norm(x)
-        x = self.activation(x)
-        x = self.conv(x, 1, c_out / 4)
-      with tf.variable_scope('S1'):
-        x = self.batch_norm(x)
-        x = self.activation(x)
-        x = self.conv(x, 3, c_out / 4, stride)  # stride 2 in 3x3 conv following fb.resnet.torch
-      with tf.variable_scope('S2'):
-        x = self.batch_norm(x)
-        x = self.activation(x)
-        x = self.conv(x, 1, c_out)
-    else:
-      with tf.variable_scope('S0'):
-        x = self.batch_norm(x)
-        x = self.activation(x)
-        x = self.conv(x, 3, c_out, stride)
-      with tf.variable_scope('S1'):
-        x = self.batch_norm(x)
-        x = self.activation(x)
-        x = self.conv(x, 3, c_out)
+    x = self.batch_norm(x)
+    x = self.activation(x)
 
-    # x = self.squeeze_and_excitation(x, r=16)
-
-    with tf.variable_scope('SA'):
+    if stride is not 1 or c_in != c_out:
+      # The conv1x1 projection shortcut should come after the first batchnorm and ReLU
+      shortcut = x
       if stride is not 1:
         # suggested by "Bag of Tricks for Image Classification with Convolutional Neural Networks"
-        orig_x = self.pool(orig_x, 'AVG', ksize=2, stride=2)
+        shortcut = self.pool(shortcut, 'AVG', ksize=2, stride=2)
       if c_in != c_out:
-        orig_x = self.conv(orig_x, 1, c_out)
-      x += orig_x
+        shortcut = self.conv(shortcut, 1, c_out)
 
-    return x
+    if bottleneck:
+      with tf.variable_scope('C0'):
+        x = self.conv(x, 1, c_out / 4)
+        x = self.batch_norm(x)
+        x = self.activation(x)
+      with tf.variable_scope('C1'):
+        x = self.conv(x, 3, c_out / 4, stride)  # stride 2 in 3x3 conv following fb.resnet.torch
+        x = self.batch_norm(x)
+        x = self.activation(x)
+      with tf.variable_scope('C2'):
+        x = self.conv(x, 1, c_out)
+    else:
+      with tf.variable_scope('C0'):
+        x = self.conv(x, 3, c_out, stride)
+        x = self.batch_norm(x)
+        x = self.activation(x)
+      with tf.variable_scope('C1'):
+        x = self.conv(x, 3, c_out)
+
+    return x + shortcut
 
   def model(self, x):
 
@@ -50,7 +48,7 @@ class ResNet(Net):
 
     if self.dataset in ['cifar10', 'cifar100']:
 
-      num_residual = 6  # totoal layer: 6n+2 / 9n+2
+      num_residual = 6  # total layer: 6n+2 / 9n+2
       bottleneck = True
       strides = [1, 2, 2]
       filters = [16, 32, 64]

@@ -7,7 +7,7 @@ class ShuffleNet(Net):
   def activation(self, x):
     return tf.nn.relu6(x)
 
-  def _branch0(self, x, c_out, stride=1):
+  def branch0(self, x, c_out, stride=1):
 
     if stride ==1:
       return x
@@ -22,7 +22,7 @@ class ShuffleNet(Net):
 
     return x
 
-  def _branch1(self, x, c_out, stride=1):
+  def branch1(self, x, c_out, stride=1):
 
     with tf.variable_scope('C0'):
       x = self.conv(x, 1, c_out)
@@ -49,9 +49,9 @@ class ShuffleNet(Net):
     c_out = int(c_out / 2)
 
     with tf.variable_scope('B0'):
-      x0 = self._branch0(x0, c_out=c_out, stride=stride)
+      x0 = self.branch0(x0, c_out=c_out, stride=stride)
     with tf.variable_scope('B1'):
-      x1 = self._branch1(x1, c_out=c_out, stride=stride)
+      x1 = self.branch1(x1, c_out=c_out, stride=stride)
 
     x = tf.concat([x0, x1], axis=1)
     x = self.shuffle_channel(x, num_group=2)
