@@ -80,27 +80,29 @@ class ShiftNet(Net):
 
       return x
 
-    # elif self.dataset in ['imagenet']:
-    #
-    #   with tf.variable_scope('init'):
-    #     x = self.conv(x, 7, 32, stride=2)
-    #
-    #   strides = [2, 1, 2, 1, 2, 1, 2, 1]
-    #   repeat = [1, 4, 1, 5, 1, 6, 1, 2]
-    #   expansion = [4, 4, 4, 3, 3, 2, 2, 1]
-    #   c_out = [64, 64, 128, 128, 256, 256, 512, 512]
-    #
-    #   for i in range(len(strides)):
-    #     for j in range(repeat[i]):
-    #       with tf.variable_scope('U%d-%d' % (i, j)):
-    #         x = self._CSC(x, c_out[i], strides[i], expansion[i])
-    #
-    #   with tf.variable_scope('global_avg_pool'):
-    #     x = self.batch_norm(x)
-    #     x = self.activation(x)
-    #     x = self.pool(x, 'GLO')
-    #
-    #   with tf.variable_scope('logit'):
-    #     x = self.fc(x, self.shape_y[1], name='fc')
-    #
-    #   return x
+    elif self.dataset in ['imagenet']:
+
+      # TODO: implement other shift kernel, e.g., 5x5, 7x7.
+
+      with tf.variable_scope('init'):
+        x = self.conv(x, 7, 32, stride=2)
+
+      strides = [2, 1, 2, 1, 2, 1, 2, 1]
+      repeat = [1, 4, 1, 5, 1, 6, 1, 2]
+      expansion = [4, 4, 4, 3, 3, 2, 2, 1]
+      c_out = [64, 64, 128, 128, 256, 256, 512, 512]
+
+      for i in range(len(strides)):
+        for j in range(repeat[i]):
+          with tf.variable_scope('U%d-%d' % (i, j)):
+            x = self._CSC(x, c_out[i], strides[i], expansion[i])
+
+      with tf.variable_scope('global_avg_pool'):
+        x = self.batch_norm(x)
+        x = self.activation(x)
+        x = self.pool(x, 'GLO')
+
+      with tf.variable_scope('logit'):
+        x = self.fc(x, self.shape_y[1], name='fc')
+
+      return x
