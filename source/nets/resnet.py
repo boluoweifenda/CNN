@@ -4,8 +4,14 @@ from nets.net import Net
 
 class ResNet(Net):
 
+  def activation(self, x):
+    if self.dataset in ['imagenet']:
+      if self.width < 0.8:
+        return tf.nn.relu6(x)  # 0.5x channels for mobile model
+    return tf.nn.relu(x)
+
   # pre-activation residual block
-  def _residual(self, x, c_out, stride=1, bottleneck=False):
+  def residual(self, x, c_out, stride=1, bottleneck=False):
     c_in = self.get_shape(x)[1]
     shortcut = x
 
@@ -48,21 +54,21 @@ class ResNet(Net):
 
     if self.dataset in ['cifar10', 'cifar100']:
 
-      num_residual = 6  # total layer: 6n+2 / 9n+2
+      Repeat = 6  # total layer: 6n+2 / 9n+2
       bottleneck = True
-      strides = [1, 2, 2]
-      filters = [16, 32, 64]
+      Stride = [1, 2, 2]
+      Out = [16, 32, 64]
 
       if bottleneck:
-        filters = [4 * i for i in filters]
+        Out = [4 * i for i in Out]
 
       with tf.variable_scope('init'):
-        x = self.conv(x, 3, filters[0])
+        x = self.conv(x, 3, Out[0])
 
-      for i in range(len(filters)):
-        for j in range(num_residual):
+      for i in range(len(Stride)):
+        for j in range(Repeat):
           with tf.variable_scope('U%d-%d' % (i, j)):
-            x = self._residual(x, filters[i], stride=strides[i] if j == 0 else 1, bottleneck=bottleneck)
+            x = self.residual(x, Out[i], stride=Stride[i] if j is 0 else 1, bottleneck=bottleneck)
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)
@@ -76,12 +82,13 @@ class ResNet(Net):
 
     elif self.dataset in ['imagenet', 'tiny_imagenet']:
 
-      num_residual = [3, 4, 6, 3]  # 50
-      # num_residual = [3, 4, 23, 3]  # 101
-      strides = [1, 2, 2, 2]
-      # filters = [128, 256, 512, 1024]  # 0.5x
-      filters = [256, 512, 1024, 2048]  # 1.0x
+      self.width = 1.0
       bottleneck = True
+      Repeat = [3, 4, 6, 3]  # 50
+      Stride = [1, 2, 2, 2]
+      Out = [256, 512, 1024, 2048]  # 1.0x
+
+      Out = [int(self.width * i) for i in Out]
 
       with tf.variable_scope('init'):
         if self.dataset == 'imagenet':
@@ -90,10 +97,10 @@ class ResNet(Net):
         else:
           x = self.conv(x, 3, 64)
 
-      for i in range(len(num_residual)):
-        for j in range(num_residual[i]):
+      for i in range(len(Stride)):
+        for j in range(Repeat[i]):
           with tf.variable_scope('U%d-%d' % (i, j)):
-            x = self._residual(x, filters[i], stride=strides[i] if j is 0 else 1, bottleneck=bottleneck)
+            x = self.residual(x, Out[i], stride=Stride[i] if j is 0 else 1, bottleneck=bottleneck)
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)

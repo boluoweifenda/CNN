@@ -17,8 +17,11 @@ def create_config_proto():
   return config
 
 
-fm_np = np.reshape(np.arange(start=1, stop=17), (1,1,4,4))
-kernel_np = np.array([[0, 1]])
+fm_np = np.tile(np.reshape(np.arange(start=1, stop=17), (1,1,4,4)), (1,9,1,1))
+kernel_np = np.array([
+  [-1, -1, -1, 0, 0, 0, 1, 1, 1],
+  [-1, 0, 1, -1, 0, 1, -1, 0, 1]
+])
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -28,11 +31,12 @@ sess.run(tf.global_variables_initializer())
 
 fm = tf.constant(fm_np, dtype=tf.float32)
 kernel = tf.constant(kernel_np, dtype=np.float32)
-result = active_shift2d(fm, kernel, strides=[1, 1, 1, 1], paddings=[0, 0, 0, 0])
-sm = sess.run(result)
-grad = tf.gradients(result, [fm, kernel])
-res = [sess.run(g) for g in grad]
+fm_shifted = active_shift2d(fm, kernel, strides=[1, 1, 1, 1], paddings=[0, 0, 0, 0])
+grad = tf.gradients(fm_shifted, [fm, kernel])
 
-print(sm)
+res_fm = sess.run(fm_shifted)
+res_grad = [sess.run(g) for g in grad]
+
+print(fm_shifted)
 
 

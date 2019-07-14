@@ -376,8 +376,6 @@ def main():
           nets.append(net(batch_attack_x, batch_attack_y, opts=opts, is_training=False))
           error_batch_attack = nets[-1].error
 
-
-
   with tf.device('/cpu:0' if is_cpu_ps else worker):
     grad_batch_train = aggregate_gradients(tower_grads)
     loss_batch_train = aggregate_statistics(tower_losses)
@@ -444,9 +442,9 @@ def main():
     print(attack(black=False))
 
   if mode == 'export':
-    vars_list = get_variable('batchnorm/gamma:')
+    vars_list = get_variable('shift')[:48]
     vars_numpy = sess.run(vars_list)
-    export(vars_numpy, 'gamma')
+    export(vars_numpy, 'shift')
 
   if mode in ['test', 'export', 'attack']:
     exit(0)
