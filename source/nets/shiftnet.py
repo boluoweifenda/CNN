@@ -6,7 +6,7 @@ from utils.active_shift.active_shift2d_op import active_shift2d
 
 class ShiftNet(Net):
 
-  def _group_shift(self, x, active=False):
+  def group_shift(self, x, active=False):
 
     kernel = np.array([
       [-1, -1, -1, 0, 0, 0, 1, 1, 1],
@@ -26,7 +26,7 @@ class ShiftNet(Net):
 
     return x
 
-  def _CSC(self, x, c_out, stride=1, expansion=6, active=False):
+  def CSC(self, x, c_out, stride=1, expansion=6, active=False):
     c_in = self.get_shape(x)[1]
     orig_x = x
 
@@ -35,7 +35,7 @@ class ShiftNet(Net):
       x = self.activation(x)
       x = self.conv(x, 1, c_in * expansion, stride=1)
 
-    x = self._group_shift(x, active=active)
+    x = self.group_shift(x, active=active)
 
     with tf.variable_scope('C1'):
       x = self.batch_norm(x)
@@ -68,7 +68,7 @@ class ShiftNet(Net):
       for i in range(len(filters)):
         for j in range(num_residual):
           with tf.variable_scope('U%d-%d' % (i, j)):
-            x = self._CSC(x, filters[i], stride=strides[i] if j == 0 else 1, expansion=expansion, active=active)
+            x = self.CSC(x, filters[i], stride=strides[i] if j == 0 else 1, expansion=expansion, active=active)
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)
@@ -95,7 +95,7 @@ class ShiftNet(Net):
       for i in range(len(strides)):
         for j in range(repeat[i]):
           with tf.variable_scope('U%d-%d' % (i, j)):
-            x = self._CSC(x, c_out[i], strides[i], expansion[i])
+            x = self.CSC(x, c_out[i], strides[i], expansion[i])
 
       with tf.variable_scope('global_avg_pool'):
         x = self.batch_norm(x)

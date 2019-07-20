@@ -38,7 +38,7 @@ class ShuffleNet(Net):
 
     return x
 
-  def _basic(self, x, c_out, stride=1):
+  def basic(self, x, c_out, stride=1):
 
     if stride == 1:
       x0, x1 = tf.split(x, num_or_size_splits=2, axis=1)
@@ -116,7 +116,7 @@ class ShuffleNet(Net):
         with tf.variable_scope('S%d' % stage):
           for repeat in range(Repeat[stage]):
             with tf.variable_scope('R%d' % repeat):
-              x = self._basic(x, c_out=Out[stage], stride=Stride[stage] if repeat is 0 else 1)
+              x = self.basic(x, c_out=Out[stage], stride=Stride[stage] if repeat is 0 else 1)
 
       with tf.variable_scope('last'):
         x = self.conv(x, 1, Out[-1])
@@ -126,7 +126,6 @@ class ShuffleNet(Net):
         x = self.pool(x, 'GLO')
 
       with tf.variable_scope('logit'):
-        x = self.dropout(x, 0.2)
         x = self.fc(x, self.shape_y[1], name='fc', bias=True)
 
       return x

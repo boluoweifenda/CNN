@@ -6,7 +6,7 @@ class ResNet(Net):
 
   def activation(self, x):
     if self.dataset in ['imagenet']:
-      if self.width < 0.8:
+      if self.width < 0.6:
         return tf.nn.relu6(x)  # 0.5x channels for mobile model
     return tf.nn.relu(x)
 

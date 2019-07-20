@@ -12,6 +12,7 @@ class MobileNet(Net):
     elif mode == 2:
       return x * tf.nn.relu6(x+3)/6
 
+  # TODO: add SE block and train the model
   def _expanded_conv(self, x, ksize, exp, c_out, stride, SE, NL, name='expanded_conv'):
     x_orig = x
     c_in = self.get_shape(x)[1]

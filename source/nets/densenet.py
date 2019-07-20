@@ -74,9 +74,6 @@ class DenseNet(Net):
       drop_prob = 0.0
       reduction = 0.5
       stages = [6, 12, 24, 16]  # densenet121
-      # stages = [6, 12, 32, 32]  # densenet169
-      # stages = [6, 12, 48, 32]  # densenet201
-      # stages = [6, 12, 64, 48]  # densenet264
 
       with tf.variable_scope('init'):
         if self.dataset == 'imagenet':
