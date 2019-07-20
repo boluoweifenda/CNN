@@ -1,15 +1,10 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-from functools import reduce
-
 import tensorflow as tf
 import numpy as np
 from tensorflow.contrib.layers import batch_norm
 from tensorflow.contrib.layers import variance_scaling_initializer
 from preprocess.preprocess_ops import channel_normalize
 import warnings
+from functools import reduce
 
 
 class Net(object):

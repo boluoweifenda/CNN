@@ -1,12 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 from utils.log import Log
 from datasets.dataset_factory import get_dataset
-from nets.nets_factory import get_net_fn
 from utils.input_pipeline import get_batch
-
+from nets.nets_factory import get_net_fn
 import numpy as np
 import time
 import os
@@ -87,14 +82,15 @@ def print_opts(path):
 def create_config_proto():
   # Build an initialization operation to run below.
   config = tf.ConfigProto()
-  config.gpu_options.allow_growth = True
-  # config.gpu_options.per_process_gpu_memory_fraction = 0.26
+  if opts.dataset is not 'imagenet':
+    config.gpu_options.allow_growth = True
+  # config.gpu_options.per_process_gpu_memory_fraction = 0.25
   config.allow_soft_placement = True
   config.log_device_placement = False
   return config
 
 
-def get_session(gpu_list):
+def get_session():
   sess = tf.InteractiveSession(config=create_config_proto())
   sess.run(tf.global_variables_initializer())
   return sess
