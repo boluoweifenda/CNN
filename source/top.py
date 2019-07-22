@@ -146,7 +146,7 @@ def delay4gpus(delay, gpu_list):
         if usage <= 1 - delay:
           break
         else:
-          print('GPU(s) are in usage %.2f, waiting' % (gpu_list[0], usage))
+          print('GPU(s) are in usage %.2f, waiting' % usage)
         time.sleep(60)
     elif delay > 1:
       delay = int(delay)
