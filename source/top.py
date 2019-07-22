@@ -11,6 +11,8 @@ from tqdm import tqdm
 import glob
 import argparse
 import importlib
+import pynvml
+import warnings
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--opts', '-o', default='opts', help='options file name')
@@ -90,7 +92,7 @@ def create_config_proto():
   return config
 
 
-def get_session():
+def get_session(gpu_list):
   sess = tf.InteractiveSession(config=create_config_proto())
   sess.run(tf.global_variables_initializer())
   return sess
@@ -133,27 +135,27 @@ def aggregate_statistics(tower_statistics):
 
 
 def delay4gpus(delay, gpu_list):
-  if isinstance(delay, bool):
-    if delay:
-      import pynvml
-      import time
+  if isinstance(delay, (int, float)):
+    if 0 < delay <= 1:
       pynvml.nvmlInit()
-      handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_list[0])
+      handle_list = [pynvml.nvmlDeviceGetHandleByIndex(gpu) for gpu in gpu_list]
       while True:
-        memory = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        usage = memory.used / memory.total
-        if usage < 0.2:
+        memory_list = [pynvml.nvmlDeviceGetMemoryInfo(handle) for handle in handle_list]
+        usage_list = [memory.used / memory.total for memory in memory_list]
+        usage = max(usage_list)
+        if usage <= 1 - delay:
           break
         else:
-          print('GPU-%d is in use %.2f, still waiting' % (gpu_list[0], usage))
+          print('GPU(s) are in usage %.2f, waiting' % (gpu_list[0], usage))
         time.sleep(60)
-  elif isinstance(delay, int) or isinstance(delay, float):
-    import time
-    delay = int(delay)
-    for minute in tqdm(range(delay), desc='Wait:', leave=False, smoothing=0.1):
-      time.sleep(60)
+    elif delay > 1:
+      delay = int(delay)
+      for minute in tqdm(range(delay), desc='Wait:', leave=False, smoothing=0.1):
+        time.sleep(60)
+    else:
+      pass
   else:
-    raise NotImplementedError('Wrong delay type')
+    warnings.warn('Wrong delay type')
 
 
 def main():
