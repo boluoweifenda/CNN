@@ -387,7 +387,7 @@ class Net(object):
         if not exclude:
           list_var.append(tf.nn.l2_loss(var))
           list_name.append(name_lowcase)
-      print('Add L2 weight decay', decay, 'to following trainable variables:')
+      print('Add L2 weight decay', decay, 'to following %d variables:' % len(list_name))
       print(list_name)
       return decay * tf.add_n(list_var)
     else:
