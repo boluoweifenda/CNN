@@ -1,6 +1,6 @@
 from utils.log import Log
-from datasets.dataset_factory import get_dataset
 from utils.input_pipeline import get_batch
+from datasets.dataset_factory import get_dataset
 from nets.nets_factory import get_net_fn
 import numpy as np
 import time
@@ -45,11 +45,10 @@ def get_variable(key=None):
 
 
 def get_time(time_format=None):
-  if time_format is not None:
-    time_str = time.strftime(time_format, time.localtime())
-    return time_str
-  else:
+  if time_format is None:
     return time.time()
+  time_str = time.strftime(time_format, time.localtime())
+  return time_str
 
 
 def set_seed(seed=None):
@@ -65,20 +64,20 @@ def set_log(path):
 
 
 def print_line():
-  print('----------------------------------------------------------------------------------------------------')
+  print('-'*100)
 
 
 def print_opts(path):
   print_line()
-  print('Options are printed as follows:')
   lines = open(path).readlines()
   # filter out unused opts
   for line in lines:
     if line == '\n': continue
-    if line[0] == '#': continue
     if line[:7] == 'import ': continue
     if line[:5] == 'from ': continue
-    print(line, end=' ' if line[-2:] == '\n' else '')
+    if line[0] == '#': continue
+    if line.find('#'): line = line[:line.find('#')]
+    print(line)
 
 
 def create_config_proto():
@@ -92,7 +91,7 @@ def create_config_proto():
   return config
 
 
-def get_session(gpu_list):
+def get_session():
   sess = tf.InteractiveSession(config=create_config_proto())
   sess.run(tf.global_variables_initializer())
   return sess
@@ -236,8 +235,6 @@ def main():
   ####################################################################################################
 
   os.environ['CUDA_VISIBLE_DEVICES'] = ''.join(str(gpu) + ',' for gpu in gpu_list)
-  # os.environ['TF_ENABLE_WINOGRAD_NONFUSED'] = '1'
-
   num_worker = max(len(gpu_list), 1)
   dataset_train = get_dataset(dataset, split='train')
   dataset_test = get_dataset(dataset, split='test')
@@ -261,7 +258,7 @@ def main():
       batch_input = iterator_test.get_next()
 
     print('Testing the speed of data input pipeline.')
-    sess = get_session(gpu_list)
+    sess = get_session()
     while True:
       for _ in tqdm(range(num_batch), desc='Input pipeline', leave=False, smoothing=0.1):
         sess.run(batch_input)
@@ -387,7 +384,7 @@ def main():
   if hasattr(opts, 'delay'):
     delay4gpus(opts.delay, gpu_list=gpu_list)
 
-  sess = get_session(gpu_list)
+  sess = get_session()
   saver = tf.train.Saver(max_to_keep=None)
 
   def evaluate():
