@@ -84,7 +84,7 @@ def print_opts(path):
 def create_config_proto():
   # Build an initialization operation to run below.
   config = tf.ConfigProto()
-  if opts.dataset is not 'imagenet':
+  if opts.dataset not in ['imagenet', 'tiny_imagenet']:
     config.gpu_options.allow_growth = True
   # config.gpu_options.per_process_gpu_memory_fraction = 0.25
   config.allow_soft_placement = True
