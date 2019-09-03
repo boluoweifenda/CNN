@@ -393,19 +393,25 @@ def main():
       error_test += sess.run(error_batch_test)
     return error_test / num_batch_test
 
-  def attack(black=False):
+  def attack(black=False, num_batch=None):
     error_fgsm = 0.
-    delta = 1./32
+    delta = 1./64
+    if num_batch is None: num_batch = num_batch_test
 
     if black is False:
       adversial_x = []
       adversial_y = []
-      for _ in tqdm(range(num_batch_test), desc='Attack', leave=False, smoothing=0.1):
+      for _ in tqdm(range(num_batch), desc='Attack', leave=False, smoothing=0.1):
         test_x, test_y, grads = sess.run([nets[1].H[0], nets[1].Y[0], nets[1].grads_H[0]])
         fsgm_x = test_x + delta*np.sign(grads)
         error_fgsm += sess.run(error_batch_attack, feed_dict={batch_attack_x: fsgm_x, batch_attack_y: test_y})
         adversial_x.append(fsgm_x)
         adversial_y.append(test_y)
+
+      adversial_x = np.array(adversial_x)
+      adversial_y = np.array(adversial_y)
+      np.savez('adversial_sample.npz', x=adversial_x, y=adversial_y)
+
     else:
       adversial_sample = np.load('adversial_sample.npz')
       adversial_x = adversial_sample['x']
@@ -414,11 +420,7 @@ def main():
         error_fgsm += sess.run(error_batch_attack,
                                feed_dict={batch_attack_x: adversial_x[i, ...], batch_attack_y: adversial_y[i, ...]})
 
-    adversial_x = np.array(adversial_x)
-    adversial_y = np.array(adversial_y)
-    np.savez('adversial_sample.npz', x=adversial_x, y=adversial_y)
-
-    return error_fgsm / num_batch_test
+    return error_fgsm / num_batch
 
   def save_model(path):
     saver.save(sess, path)
@@ -434,7 +436,7 @@ def main():
     print('Test: %.4f' % error_test_best)
 
   if mode == 'attack':
-    print(attack(black=False))
+    print(attack(black=False, num_batch=None))
 
   if mode == 'export':
     vars_list = get_variable('shift')[:48]
