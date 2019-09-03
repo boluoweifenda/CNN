@@ -127,7 +127,7 @@ class ShuffleNet(Net):
 
       with tf.variable_scope('logit'):
         # dropout can improve the accuracy 27.5%->26.6%, but it is not mentioned in the paper
-        # x = self.dropout(x, 0.2)
+        x = self.dropout(x, 0.2)
         x = self.fc(x, self.shape_y[1], name='fc', bias=True)
 
       return x
