@@ -48,7 +48,7 @@ class ResNet(Net):
       return self.conv(x, ksize=2, c_out=c_out, stride=stride, padding='SAME')
     elif mode=='c3':
       return self.conv(x, ksize=3, c_out=c_out, stride=stride, padding='SAME')
-    elif mode=='c2sp':
+    elif mode in ['c2sp', 'c2sp_optim']:
       return self.conv_sp(x, ksize=2, c_out=c_out, stride=stride)
     else:
       raise NotImplementedError('Wrong mode named: %s' % mode)
@@ -87,11 +87,43 @@ class ResNet(Net):
 
   def model(self, x):
 
+    assert self.dataset is 'imagenet'
     print('resnet for %s dataset' % self.dataset)
 
-    mode = 'c2sp'
+    mode = 'c3'  # c3, c2, c2sp, c2sp_optim
 
-    if self.dataset in ['imagenet']:
+    if mode is 'c2sp_optim':
+
+      Repeat = [2, 4, 8, 4]
+      Stride = [2, 2, 2, 2]
+      Out = [96, 192, 384, 768]
+      bottleneck = [4, 4, 4, 4]
+
+      with tf.variable_scope('init'):
+        x = self.conv(x, 3, 24, stride=2)
+
+      for i in range(len(Stride)):
+        for j in range(Repeat[i]):
+          with tf.variable_scope('U%d-%d' % (i, j)):
+            x = self.residual(x, Out[i], stride=Stride[i] if j is 0 else 1, mode=mode, bottleneck=bottleneck[i])
+
+      with tf.variable_scope('last'):
+        x = self.batch_norm(x)
+        x = self.activation(x)
+        x = self.conv(x, 1, 2 * Out[-1])
+
+      with tf.variable_scope('global_avg_pool'):
+        x = self.batch_norm(x)
+        x = self.activation(x)
+        x = self.pool(x, 'GLO')
+
+      with tf.variable_scope('logit'):
+        x = self.dropout(x, 0.2)
+        x = self.fc(x, self.shape_y[1], name='fc', bias=True)
+
+      return x
+
+    else:
 
       Repeat = [3, 4, 6, 3]
       Stride = [1, 2, 2, 2]
@@ -116,47 +148,5 @@ class ResNet(Net):
         x = self.fc(x, self.shape_y[1], name='fc', bias=True)
 
       return x
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      # Repeat = [4, 8, 4]
-      # Strides = [2, 2, 2]
-      #
-      # # Out = [64, 128, 256, 512]  # 1.0x
-      # # Out = [96, 192, 384, 768]  # 1.5x
-      # Out = [256, 512, 1024]  # 2.0x
-      #
-      # with tf.variable_scope('init'):
-      #   x = self.conv(x, 3, 64, stride=2)
-      #   x = self.pool(x, type='MAX', ksize=3, stride=2)
-      #
-      # for stage in range(len(Repeat)):
-      #   with tf.variable_scope('S%d' % stage):
-      #     for repeat in range(Repeat[stage]):
-      #       with tf.variable_scope('R%d' % repeat):
-      #         x = self._residual(x, c_out=Out[stage], stride=Strides[stage] if repeat is 0 else 1)
-      #
-      # with tf.variable_scope('global_avg_pool'):
-      #   x = self.batch_norm(x)
-      #   x = self.activation(x)
-      #   x = self.pool(x, 'GLO')
-      #
-      # with tf.variable_scope('logit'):
-      #   x = self.fc(x, self.shape_y[1], name='fc', bias=True)
-      #
-      # return x
 
 

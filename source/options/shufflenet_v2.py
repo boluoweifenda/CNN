@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-title = 'shufflenet-v2, 2.0x'  # top1 error rate: 27.5%
+title = 'shufflenet-v2, 2.0x'  # top1 error rate: 26.6%
 mode = 'train'  # 'train', 'test', 'restart', 'debug', 'export', 'input_train', 'input_test', 'speed_net'
 seed = None
 repeat = 1

@@ -77,7 +77,7 @@ class ShuffleNet(Net):
         with tf.variable_scope('S%d' % stage):
           for repeat in range(Repeat[stage]):
             with tf.variable_scope('R%d' % repeat):
-              x = self._basic(x, c_out=Out[stage], stride=strides[stage] if repeat == 0 else 1)
+              x = self.basic(x, c_out=Out[stage], stride=strides[stage] if repeat == 0 else 1)
 
       with tf.variable_scope('last'):
         x = self.conv(x, 1, Out[-1])
@@ -126,7 +126,7 @@ class ShuffleNet(Net):
         x = self.pool(x, 'GLO')
 
       with tf.variable_scope('logit'):
-        # dropout can improve the accuracy 27.5%->26.6%, but it is not mentioned in the paper
+        # dropout can improve the accuracy 27.5%->26.6%
         x = self.dropout(x, 0.2)
         x = self.fc(x, self.shape_y[1], name='fc', bias=True)
 
