@@ -5,7 +5,7 @@ A simple and extensible project based on
 for 
 - fast demonstrations of various ideas
 - reimplementation of CNN architecture engineering papers, e.g., MobileNetV2, ShuffleNetV2.
-- example code for the NeurIPS 2019 paper: [Convolution with even-sized kernels and symmetric padding](arxiv.org/abs/1903.08385)
+- example code for the NeurIPS 2019 paper: [Convolution with even-sized kernels and symmetric padding](https://arxiv.org/abs/1903.08385)
 - <a href="#exercise">exercises for Tsinghua lecture: Neuromorphic Computing Theory and System</a><br>
 
 ## Prerequisites
