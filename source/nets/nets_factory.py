@@ -12,7 +12,7 @@ from nets import mobilenet_v1
 from nets import mobilenet_v2
 from nets import shufflenet_v2
 from nets import resnet50_c2sp
-# from nets import shiftnet
+# from nets import shiftnet  # need to compile kernels in utils/active_shift
 
 nets_map = {
   'mlp': mlp.MLP,
