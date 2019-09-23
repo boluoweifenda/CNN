@@ -102,6 +102,7 @@ class Net(object):
 
   def dropout(self, x, rate, noise_shape=None, seed=None, name=None):
     if rate > 0.00001 and self.is_training:
+      print('Dropout probability %f' % rate)
       x = tf.nn.dropout(x, rate=rate, noise_shape=noise_shape, seed=seed, name=name)
     return x
 

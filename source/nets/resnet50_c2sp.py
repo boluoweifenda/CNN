@@ -94,13 +94,13 @@ class ResNet(Net):
 
     if mode is 'c2sp_optim':
 
-      Repeat = [2, 4, 8, 4]
-      Stride = [2, 2, 2, 2]
-      Out = [96, 192, 384, 768]
-      bottleneck = [4, 4, 4, 4]
+      Repeat = [1, 2, 4, 8, 4]
+      Stride = [1, 2, 2, 2, 2]
+      Out = [48, 96, 192, 384, 768]
+      bottleneck = [4, 4, 4, 4, 4]
 
       with tf.variable_scope('init'):
-        x = self.conv(x, 3, 24, stride=2)
+        x = self.conv(x, 3, 48, stride=2)
 
       for i in range(len(Stride)):
         for j in range(Repeat[i]):

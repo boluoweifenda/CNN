@@ -446,9 +446,6 @@ def main():
   if mode in ['test', 'export', 'attack']:
     exit(0)
 
-  if mode == 'restart':
-    sess.run(epoch_step.assign(0))
-
   print_line()
 
   ####################################################################################################
