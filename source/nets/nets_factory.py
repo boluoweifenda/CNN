@@ -25,7 +25,6 @@ nets_map = {
   'mobilenet_v2': mobilenet_v2.MobileNet,
   'shufflenet_v2': shufflenet_v2.ShuffleNet,
   'resnet50_c2sp': resnet50_c2sp.ResNet,
-  'shufflenet_test': shufflenet_test.ShuffleNet,
   # 'shiftnet': shiftnet.ShiftNet,
 }
 
