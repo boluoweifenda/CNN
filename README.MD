@@ -3,7 +3,6 @@
 A simple and extensible project based on 
 [TensorFlow-Slim image classification model library](https://github.com/tensorflow/models/tree/master/research/slim)
 for 
-- fast demonstrations of various ideas
 - reimplementation of CNN architecture engineering papers, e.g., MobileNetV2, ShuffleNetV2.
 - example code for the NeurIPS 2019 paper: [Convolution with even-sized kernels and symmetric padding](https://arxiv.org/abs/1903.08385)
 - <a href="#exercise">exercises for Tsinghua lecture: Neuromorphic Computing Theory and System</a><br>
@@ -67,24 +66,24 @@ And the model will be saved in `model/time_your_title` if you have configured th
 ## Exercise for Tsinghua lecture: Neuromorphic Computing Theory and System
 <a id='exercise'></a>
 
-Íê³ÉÏÂÁĞÊµÑé£¬Ìá½»ÊµÑé±¨¸æ£¬ÄÚÈİ°üÀ¨£º
-- ÊµÑéÕû¸öÁ÷³Ì¹Ø¼üĞÅÏ¢µÄ¼ÇÂ¼£¬·ÖÎö£¬×Ü½á
-- ÔËĞĞ¡¢½á¹ûµÈ½ØÍ¼£¬ÊÕÁ²ÇúÏßµÈµÈ
-- ¸öÈË¸ĞÏë
+å®Œæˆä¸‹åˆ—å®éªŒï¼Œæäº¤å®éªŒæŠ¥å‘Šï¼Œå†…å®¹åŒ…æ‹¬ï¼š
+- å®éªŒæ•´ä¸ªæµç¨‹å…³é”®ä¿¡æ¯çš„è®°å½•ï¼Œåˆ†æï¼Œæ€»ç»“
+- è¿è¡Œã€ç»“æœç­‰æˆªå›¾ï¼Œæ”¶æ•›æ›²çº¿ç­‰ç­‰
+- ä¸ªäººæ„Ÿæƒ³
 
 ### Experiment 1:
-Ê¹ÓÃMLPÑµÁ·mnist£¬`/options/mlp_mnist.py` ¼ÇÂ¼£º
-- ÊÕÁ²ÇúÏß£¨trainÕıÈ·ÂÊ£¬testÕıÈ·ÂÊ£¬train loss£©
-- ³¢ÊÔÌí¼Ó¼¸²ãÈ«Á¬½Ó£¬¶Ô±ÈĞ§¹û
-- ³¢ÊÔ¸ü¸Äloss function ºÍ optimizer£¬ ¶Ô±ÈĞ§¹û
+ä½¿ç”¨MLPè®­ç»ƒmnistï¼Œ`/options/mlp_mnist.py` è®°å½•ï¼š
+- æ”¶æ•›æ›²çº¿ï¼ˆtrainæ­£ç¡®ç‡ï¼Œtestæ­£ç¡®ç‡ï¼Œtrain lossï¼‰
+- å°è¯•æ·»åŠ å‡ å±‚å…¨è¿æ¥ï¼Œå¯¹æ¯”æ•ˆæœ
+- å°è¯•æ›´æ”¹loss function å’Œ optimizerï¼Œ å¯¹æ¯”æ•ˆæœ
 
 ### Experiment 2:
-Ê¹ÓÃLeNetÑµÁ·fashion£¬`/options/lenet_fashion.py` ¼ÇÂ¼:
-- ÊÕÁ²ÇúÏß£¨trainÕıÈ·ÂÊ£¬testÕıÈ·ÂÊ£¬train loss£©
-- ³¢ÊÔÌí¼Ó¼¸²ã¾í»ı£¬ÒÔ¼°ĞŞ¸Äpreprocess£¬¶Ô±ÈĞ§¹û
-- ³¢ÊÔÊ¹ÓÃMLPÑµÁ·fashion£¬¶Ô±ÈºÍCNNµÄ²î±ğ
+ä½¿ç”¨LeNetè®­ç»ƒfashionï¼Œ`/options/lenet_fashion.py` è®°å½•:
+- æ”¶æ•›æ›²çº¿ï¼ˆtrainæ­£ç¡®ç‡ï¼Œtestæ­£ç¡®ç‡ï¼Œtrain lossï¼‰
+- å°è¯•æ·»åŠ å‡ å±‚å·ç§¯ï¼Œä»¥åŠä¿®æ”¹preprocessï¼Œå¯¹æ¯”æ•ˆæœ
+- å°è¯•ä½¿ç”¨MLPè®­ç»ƒfashionï¼Œå¯¹æ¯”å’ŒCNNçš„å·®åˆ«
 
 ### Experiment 3:
-- ²Î¿¼[ResNetÂÛÎÄ](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)
-- ²¹È«`/options/resnet_cifar.py`ÖĞµÄÉèÖÃ
-- ¸´ÏÖÆäResNet-56µÄÊµÑé½á¹û
+- å‚è€ƒ[ResNetè®ºæ–‡](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)
+- è¡¥å…¨`/options/resnet_cifar.py`ä¸­çš„è®¾ç½®
+- å¤ç°å…¶ResNet-56çš„å®éªŒç»“æœ
