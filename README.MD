@@ -4,7 +4,7 @@ A simple and extensible project based on
 [TensorFlow-Slim image classification model library](https://github.com/tensorflow/models/tree/master/research/slim)
 for 
 - reimplementation of CNN architecture engineering papers, e.g., MobileNetV2, ShuffleNetV2.
-- example code for the NeurIPS 2019 paper: [Convolution with even-sized kernels and symmetric padding](https://arxiv.org/abs/1903.08385)
+- example code for the NeurIPS 2019 paper: [Convolution with even-sized kernels and symmetric padding](http://papers.nips.cc/paper/8403-convolution-with-even-sized-kernels-and-symmetric-padding)
 - <a href="#exercise">exercises for Tsinghua lecture: Neuromorphic Computing Theory and System</a><br>
 
 ## Prerequisites
